@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1F4E79">
+<title>Menus et courses</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--blue:#1F4E79;--blue2:#2E75B6;--blue3:#BDD7EE;--bg:#F3F6FA;--card:#fff;--input:#FFF2CC;--inputb:#E6D48F;--line:#D9E2EC;--text:#1a1a1a;--muted:#5b6770;--warn:#C00000;--c0:#C0504D;--c1:#E0A030;--c2:#2E75B6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px}
+body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+header#top{position:sticky;top:0;z-index:5;background:var(--blue);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:baseline;gap:10px}
+header#top h1{margin:0;font-size:19px}
+header#top small{opacity:.75}
+main{max-width:720px;margin:0 auto;padding:6px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 12px}
+.cat{border-left:6px solid var(--blue)}
+.c0{border-left-color:var(--c0)}.c1{border-left-color:var(--c1)}.c2{border-left-color:var(--c2)}
+.cat-t{font-weight:700;color:var(--blue);margin-bottom:8px}
+h3{margin:18px 0 8px;color:var(--blue);font-size:15px}
+h4{margin:14px 0 4px;color:var(--blue);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.muted{color:var(--muted);font-size:13px}
+.warn{color:var(--warn);font-weight:600;font-size:13px;margin-top:6px}
+select.edit,input.edit{width:100%;background:var(--input);border:1px solid var(--inputb);border-radius:10px;padding:10px;font-size:16px;color:var(--text);font-family:inherit}
+label.f{display:block;margin:10px 0 0;font-size:13px;color:var(--muted)}
+label.f .edit{margin-top:4px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:38px;height:38px;border-radius:50%;border:1px solid var(--blue2);background:#fff;color:var(--blue);font-size:22px;line-height:1}
+.stepper b{min-width:22px;text-align:center;font-size:17px}
+.weeknav{display:flex;align-items:center;justify-content:space-between;margin:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+.weeknav button.n{width:44px;height:44px;border:0;background:transparent;font-size:26px;color:var(--blue)}
+.weeknav .t{text-align:center}
+.weeknav .t b{display:block;font-size:17px;color:var(--blue)}
+.btn{display:inline-block;border:0;border-radius:10px;background:var(--blue);color:#fff;padding:11px 16px;font-size:15px;font-weight:600;font-family:inherit}
+.btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue2)}
+.btn.danger{background:#fff;color:var(--warn);border:1px solid var(--warn);margin-top:18px}
+.btn.small{padding:8px 12px;font-size:13px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.sum div{background:var(--bg);border-radius:10px;padding:10px 4px}
+.sum b{display:block;font-size:17px;color:var(--blue)}
+.sum span{font-size:12px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.chk input{width:24px;height:24px;accent-color:var(--blue);flex:none}
+.chk .nm{flex:1}
+.chk .qt{font-weight:600;white-space:nowrap}
+.chk .pr{color:var(--muted);font-size:13px;min-width:52px;text-align:right}
+.chk.done .nm,.chk.done .qt,.chk.done .pr{text-decoration:line-through;color:#98a2ab}
+.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.item .nm{flex:1}
+.item .sub{color:var(--muted);font-size:13px}
+.hl{background:var(--blue3);border-radius:6px;padding:1px 6px;font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12px;color:var(--muted);text-align:right;font-weight:600;padding:4px 2px}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:11px 2px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl td:first-child{white-space:normal;cursor:pointer}
+.seg{display:flex;gap:6px;margin:8px 0}
+.seg button{flex:1;padding:9px;border:1px solid var(--blue2);background:#fff;color:var(--blue);border-radius:10px;font-weight:600;font-size:14px}
+.seg button.on{background:var(--blue);color:#fff}
+nav#tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav#tabs button{flex:1;border:0;background:transparent;padding:8px 2px 7px;font-size:11px;color:var(--muted);font-family:inherit}
+nav#tabs button i{display:block;font-style:normal;font-size:22px;line-height:1.2}
+nav#tabs button.on{color:var(--blue);font-weight:700}
+#modal{position:fixed;inset:0;z-index:20;background:rgba(15,30,45,.45)}
+#modal[hidden]{display:none}
+.sheet{position:absolute;inset:0;background:var(--bg);overflow:auto;max-width:720px;margin:0 auto}
+.sheet-h{position:sticky;top:0;background:var(--blue);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2}
+.sheet-h b{font-size:17px}
+.sheet-b{padding:6px 14px calc(30px + env(safe-area-inset-bottom))}
+.x{border:0;background:transparent;color:inherit;font-size:20px;padding:6px 8px}
+.sheet-b .x{color:var(--muted)}
+.line{display:grid;grid-template-columns:1fr 78px 44px 32px;gap:6px;align-items:center;margin-bottom:8px}
+.line .warn{grid-column:1/-1;margin:-2px 0 4px}
+.line .u{color:var(--muted);font-size:13px}
+.stats{margin-top:16px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.calc{margin-top:14px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.6}
+.rowx{display:grid;grid-template-columns:1fr 1fr 80px 34px;gap:6px;margin-bottom:6px;align-items:center}
+.ray{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
+.ray span{flex:1}
+.ray button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;color:var(--blue)}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:30;max-width:90%;text-align:center}
+#toast.on{opacity:.95}
+</style>
+</head>
+<body>
+<header id="top"><h1 id="ttl"></h1><small>Menus et courses</small></header>
+<main id="view"></main>
+<nav id="tabs"></nav>
+<div id="modal" hidden></div>
+<div id="toast"></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+<script>
+const SEED = {"cats": ["Tomate", "Crème", "Relevé / four"], "plats": [{"name": "Spaghettis sauce tomate boulettes", "cat": 0}, {"name": "Semoule ratatouille boulettes", "cat": 0}, {"name": "Paupiettes sauce tomate purée", "cat": 0}, {"name": "Poulet crème champignons riz", "cat": 1}, {"name": "Pâtes forestières", "cat": 1}, {"name": "Chili con carne", "cat": 2}, {"name": "Poulet basquaise riz", "cat": 2}, {"name": "Hachis parmentier", "cat": 2}, {"name": "Cuisses de poulet haricots verts", "cat": 2}], "recipes": {"Spaghettis sauce tomate boulettes": [{"ing": "Spaghettis", "qty": 90}, {"ing": "Boulettes de bœuf (prêtes)", "qty": 150}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Champignons de Paris", "qty": 60}, {"ing": "Carotte", "qty": 60}, {"ing": "Poivron", "qty": 40}, {"ing": "Tomates concassées (boîte)", "qty": 150}, {"ing": "Thym", "qty": 0.25}, {"ing": "Origan", "qty": 0.25}, {"ing": "Laurier (feuille)", "qty": 0.1}, {"ing": "Parmesan râpé", "qty": 10}], "Semoule ratatouille boulettes": [{"ing": "Semoule", "qty": 70}, {"ing": "Boulettes de bœuf (prêtes)", "qty": 150}, {"ing": "Aubergine", "qty": 60}, {"ing": "Courgette", "qty": 100}, {"ing": "Poivron", "qty": 60}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Tomates concassées (boîte)", "qty": 150}, {"ing": "Concentré de tomate", "qty": 10}, {"ing": "Huile d'olive", "qty": 1}, {"ing": "Vinaigre balsamique", "qty": 1}, {"ing": "Herbes de Provence", "qty": 0.5}, {"ing": "Thym", "qty": 0.25}, {"ing": "Laurier (feuille)", "qty": 0.1}], "Paupiettes sauce tomate purée": [{"ing": "Paupiettes de veau", "qty": 1}, {"ing": "Pommes de terre", "qty": 200}, {"ing": "Carotte", "qty": 60}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Champignons de Paris", "qty": 50}, {"ing": "Tomates concassées (boîte)", "qty": 150}, {"ing": "Concentré de tomate", "qty": 15}, {"ing": "Vinaigre balsamique", "qty": 1}, {"ing": "Sauce soja", "qty": 1}, {"ing": "Thym", "qty": 0.25}, {"ing": "Laurier (feuille)", "qty": 0.1}, {"ing": "Lait demi-écrémé", "qty": 30}, {"ing": "Beurre", "qty": 10}, {"ing": "Muscade", "qty": 0.5}], "Poulet crème champignons riz": [{"ing": "Filet de poulet", "qty": 150}, {"ing": "Riz", "qty": 70}, {"ing": "Champignons de Paris", "qty": 120}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Poireau", "qty": 60}, {"ing": "Crème fraîche 30%", "qty": 40}, {"ing": "Bouillon de volaille (cube)", "qty": 0.1}, {"ing": "Moutarde à l'ancienne", "qty": 1}, {"ing": "Thym", "qty": 0.25}, {"ing": "Persil frais", "qty": 2}], "Pâtes forestières": [{"ing": "Pâtes", "qty": 90}, {"ing": "Champignons de Paris", "qty": 120}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Lardons", "qty": 30}, {"ing": "Crème fraîche 30%", "qty": 40}, {"ing": "Épinards surgelés", "qty": 60}, {"ing": "Parmesan râpé", "qty": 8}, {"ing": "Persil frais", "qty": 2}, {"ing": "Thym", "qty": 0.25}, {"ing": "Muscade", "qty": 0.5}, {"ing": "Moutarde à l'ancienne", "qty": 0.5}], "Chili con carne": [{"ing": "Viande hachée de bœuf 5% MG", "qty": 120}, {"ing": "Haricots rouges (boîte)", "qty": 80}, {"ing": "Poivron", "qty": 60}, {"ing": "Maïs (boîte)", "qty": 40}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Tomates concassées (boîte)", "qty": 120}, {"ing": "Concentré de tomate", "qty": 10}, {"ing": "Riz", "qty": 60}, {"ing": "Épices chili", "qty": 0.75}, {"ing": "Cumin", "qty": 0.25}, {"ing": "Paprika fumé", "qty": 0.25}, {"ing": "Origan", "qty": 0.25}, {"ing": "Chocolat noir", "qty": 3}], "Poulet basquaise riz": [{"ing": "Hauts de cuisse de poulet", "qty": 180}, {"ing": "Poivron", "qty": 120}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Tomates concassées (boîte)", "qty": 120}, {"ing": "Riz", "qty": 70}, {"ing": "Paprika", "qty": 0.5}, {"ing": "Piment d'Espelette", "qty": 0.5}, {"ing": "Thym", "qty": 0.25}, {"ing": "Laurier (feuille)", "qty": 0.1}, {"ing": "Huile d'olive", "qty": 1}], "Hachis parmentier": [{"ing": "Viande hachée de bœuf 5% MG", "qty": 130}, {"ing": "Pommes de terre", "qty": 220}, {"ing": "Carotte", "qty": 70}, {"ing": "Champignons de Paris", "qty": 40}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Courge butternut surgelée (cubes)", "qty": 60}, {"ing": "Lait demi-écrémé", "qty": 40}, {"ing": "Beurre", "qty": 10}, {"ing": "Gruyère râpé", "qty": 15}, {"ing": "Concentré de tomate", "qty": 10}, {"ing": "Sauce Worcestershire", "qty": 1}, {"ing": "Thym", "qty": 0.25}, {"ing": "Laurier (feuille)", "qty": 0.1}, {"ing": "Muscade", "qty": 0.5}], "Cuisses de poulet haricots verts": [{"ing": "Cuisses de poulet", "qty": 1}, {"ing": "Haricots verts", "qty": 200}, {"ing": "Pommes de terre", "qty": 200}, {"ing": "Oignon", "qty": 0.25}, {"ing": "Paprika", "qty": 0.5}, {"ing": "Herbes de Provence", "qty": 0.5}, {"ing": "Thym", "qty": 0.25}, {"ing": "Citron jaune", "qty": 0.1}, {"ing": "Huile d'olive", "qty": 1}]}, "catalogue": [{"name": "Aubergine", "rayon": "Fruits & légumes", "unit": "g", "kcal": 24, "per": 100, "pack": "au kg (vrac)", "price": 3.2, "content": 1000, "cunit": "g", "manual": null}, {"name": "Carotte", "rayon": "Fruits & légumes", "unit": "g", "kcal": 41, "per": 100, "pack": "sachet 1 kg", "price": 1.4, "content": 1000, "cunit": "g", "manual": null}, {"name": "Champignons de Paris", "rayon": "Fruits & légumes", "unit": "g", "kcal": 22, "per": 100, "pack": "barquette 500 g", "price": 2.6, "content": 500, "cunit": "g", "manual": null}, {"name": "Citron jaune", "rayon": "Fruits & légumes", "unit": "unité", "kcal": 25, "per": 1, "pack": "filet de 3 citrons", "price": 1.8, "content": 3, "cunit": "unité", "manual": null}, {"name": "Courgette", "rayon": "Fruits & légumes", "unit": "g", "kcal": 17, "per": 100, "pack": "au kg (vrac)", "price": 2.8, "content": 1000, "cunit": "g", "manual": null}, {"name": "Haricots verts", "rayon": "Fruits & légumes", "unit": "g", "kcal": 31, "per": 100, "pack": "barquette 500 g", "price": 2.5, "content": 500, "cunit": "g", "manual": null}, {"name": "Oignon", "rayon": "Fruits & légumes", "unit": "unité", "kcal": 45, "per": 1, "pack": "filet de 1 kg (≈ 8 oignons)", "price": 1.8, "content": 8, "cunit": "unité", "manual": null}, {"name": "Persil frais", "rayon": "Fruits & légumes", "unit": "g", "kcal": 36, "per": 100, "pack": "botte 50 g", "price": 1.2, "content": 50, "cunit": "g", "manual": null}, {"name": "Poireau", "rayon": "Fruits & légumes", "unit": "g", "kcal": 31, "per": 100, "pack": "au kg (vrac)", "price": 3, "content": 1000, "cunit": "g", "manual": null}, {"name": "Poivron", "rayon": "Fruits & légumes", "unit": "g", "kcal": 27, "per": 100, "pack": "au kg (vrac)", "price": 4.5, "content": 1000, "cunit": "g", "manual": null}, {"name": "Pommes de terre", "rayon": "Fruits & légumes", "unit": "g", "kcal": 77, "per": 100, "pack": "sac 2,5 kg", "price": 3.5, "content": 2500, "cunit": "g", "manual": null}, {"name": "Boulettes de bœuf (prêtes)", "rayon": "Boucherie", "unit": "g", "kcal": 230, "per": 100, "pack": "barquette 400 g", "price": 4.2, "content": 400, "cunit": "g", "manual": null}, {"name": "Cuisses de poulet", "rayon": "Boucherie", "unit": "unité", "kcal": 380, "per": 1, "pack": "barquette de 4 cuisses", "price": 4.6, "content": 4, "cunit": "unité", "manual": null}, {"name": "Filet de poulet", "rayon": "Boucherie", "unit": "g", "kcal": 110, "per": 100, "pack": "barquette 600 g", "price": 7.2, "content": 600, "cunit": "g", "manual": null}, {"name": "Hauts de cuisse de poulet", "rayon": "Boucherie", "unit": "g", "kcal": 170, "per": 100, "pack": "barquette 1 kg", "price": 5.5, "content": 1000, "cunit": "g", "manual": null}, {"name": "Lardons", "rayon": "Boucherie", "unit": "g", "kcal": 290, "per": 100, "pack": "paquet 2 x 75 g", "price": 2.2, "content": 150, "cunit": "g", "manual": null}, {"name": "Paupiettes de veau", "rayon": "Boucherie", "unit": "unité", "kcal": 200, "per": 1, "pack": "barquette de 4 paupiettes", "price": 5.5, "content": 4, "cunit": "unité", "manual": null}, {"name": "Viande hachée de bœuf 5% MG", "rayon": "Boucherie", "unit": "g", "kcal": 125, "per": 100, "pack": "barquette 350 g", "price": 4.4, "content": 350, "cunit": "g", "manual": null}, {"name": "Beurre", "rayon": "Crèmerie", "unit": "g", "kcal": 740, "per": 100, "pack": "plaquette 250 g", "price": 2.3, "content": 250, "cunit": "g", "manual": null}, {"name": "Crème fraîche 30%", "rayon": "Crèmerie", "unit": "ml", "kcal": 300, "per": 100, "pack": "pot 20 cl", "price": 1.3, "content": 20, "cunit": "cl", "manual": null}, {"name": "Gruyère râpé", "rayon": "Crèmerie", "unit": "g", "kcal": 400, "per": 100, "pack": "sachet 200 g", "price": 2.6, "content": 200, "cunit": "g", "manual": null}, {"name": "Lait demi-écrémé", "rayon": "Crèmerie", "unit": "ml", "kcal": 46, "per": 100, "pack": "brique 1 L", "price": 1.15, "content": 1, "cunit": "L", "manual": null}, {"name": "Parmesan râpé", "rayon": "Crèmerie", "unit": "g", "kcal": 400, "per": 100, "pack": "sachet 100 g", "price": 2.3, "content": 100, "cunit": "g", "manual": null}, {"name": "Bouillon de volaille (cube)", "rayon": "Épicerie", "unit": "unité", "kcal": 20, "per": 1, "pack": "boîte de 18 cubes", "price": 1.5, "content": 18, "cunit": "unité", "manual": null}, {"name": "Chocolat noir", "rayon": "Épicerie", "unit": "g", "kcal": 540, "per": 100, "pack": "tablette 100 g", "price": 1.5, "content": 100, "cunit": "g", "manual": null}, {"name": "Concentré de tomate", "rayon": "Épicerie", "unit": "g", "kcal": 85, "per": 100, "pack": "tube 140 g", "price": 1.1, "content": 140, "cunit": "g", "manual": null}, {"name": "Haricots rouges (boîte)", "rayon": "Épicerie", "unit": "g", "kcal": 100, "per": 100, "pack": "boîte 400 g", "price": 1.15, "content": 400, "cunit": "g", "manual": null}, {"name": "Huile d'olive", "rayon": "Épicerie", "unit": "c.à.c", "kcal": 40, "per": 1, "pack": "bouteille 75 cl", "price": 6.5, "content": 75, "cunit": "cl", "manual": null}, {"name": "Maïs (boîte)", "rayon": "Épicerie", "unit": "g", "kcal": 85, "per": 100, "pack": "boîte 300 g", "price": 1, "content": 300, "cunit": "g", "manual": null}, {"name": "Pâtes", "rayon": "Épicerie", "unit": "g", "kcal": 350, "per": 100, "pack": "paquet 500 g", "price": 1, "content": 500, "cunit": "g", "manual": null}, {"name": "Riz", "rayon": "Épicerie", "unit": "g", "kcal": 350, "per": 100, "pack": "paquet 1 kg", "price": 2.2, "content": 1000, "cunit": "g", "manual": null}, {"name": "Semoule", "rayon": "Épicerie", "unit": "g", "kcal": 360, "per": 100, "pack": "paquet 500 g", "price": 1.3, "content": 500, "cunit": "g", "manual": null}, {"name": "Spaghettis", "rayon": "Épicerie", "unit": "g", "kcal": 350, "per": 100, "pack": "paquet 500 g", "price": 1.1, "content": 500, "cunit": "g", "manual": null}, {"name": "Tomates concassées (boîte)", "rayon": "Épicerie", "unit": "g", "kcal": 25, "per": 100, "pack": "boîte 400 g", "price": 0.95, "content": 400, "cunit": "g", "manual": null}, {"name": "Cumin", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 8, "per": 1, "pack": "pot 40 g", "price": 2.3, "content": 40, "cunit": "g", "manual": 2}, {"name": "Herbes de Provence", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 3, "per": 1, "pack": "pot 20 g", "price": 1.8, "content": 20, "cunit": "g", "manual": 1}, {"name": "Laurier (feuille)", "rayon": "Épices & condiments", "unit": "unité", "kcal": 1, "per": 1, "pack": "sachet ≈ 20 feuilles", "price": 1.6, "content": 20, "cunit": "unité", "manual": null}, {"name": "Moutarde à l'ancienne", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 8, "per": 1, "pack": "pot 200 g", "price": 2.2, "content": 200, "cunit": "g", "manual": null}, {"name": "Muscade", "rayon": "Épices & condiments", "unit": "pincée", "kcal": 1, "per": 1, "pack": "pot moulu 35 g", "price": 2.3, "content": 35, "cunit": "g", "manual": null}, {"name": "Origan", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 3, "per": 1, "pack": "pot 10 g", "price": 1.9, "content": 10, "cunit": "g", "manual": 1}, {"name": "Paprika", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 6, "per": 1, "pack": "pot 45 g", "price": 2, "content": 45, "cunit": "g", "manual": 2}, {"name": "Paprika fumé", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 6, "per": 1, "pack": "pot 40 g", "price": 2.3, "content": 40, "cunit": "g", "manual": 2}, {"name": "Piment d'Espelette", "rayon": "Épices & condiments", "unit": "pincée", "kcal": 1, "per": 1, "pack": "pot 40 g", "price": 6.5, "content": 40, "cunit": "g", "manual": null}, {"name": "Sauce Worcestershire", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 5, "per": 1, "pack": "flacon 15 cl", "price": 2.6, "content": 15, "cunit": "cl", "manual": null}, {"name": "Sauce soja", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 3, "per": 1, "pack": "bouteille 25 cl", "price": 2.2, "content": 25, "cunit": "cl", "manual": null}, {"name": "Thym", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 3, "per": 1, "pack": "pot 12 g", "price": 1.9, "content": 12, "cunit": "g", "manual": 1}, {"name": "Vinaigre balsamique", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 14, "per": 1, "pack": "bouteille 50 cl", "price": 2.8, "content": 50, "cunit": "cl", "manual": null}, {"name": "Épices chili", "rayon": "Épices & condiments", "unit": "c.à.c", "kcal": 8, "per": 1, "pack": "pot 40 g", "price": 2.2, "content": 40, "cunit": "g", "manual": 2}, {"name": "Courge butternut surgelée (cubes)", "rayon": "Surgelés", "unit": "g", "kcal": 40, "per": 100, "pack": "sachet 600 g", "price": 2.5, "content": 600, "cunit": "g", "manual": null}, {"name": "Épinards surgelés", "rayon": "Surgelés", "unit": "g", "kcal": 25, "per": 100, "pack": "sachet 750 g", "price": 2.2, "content": 750, "cunit": "g", "manual": null}], "conversions": [{"de": "c.à.c", "vers": "ml", "f": 5}, {"de": "c.à.c", "vers": "g", "f": 5}, {"de": "c.à.s", "vers": "ml", "f": 15}, {"de": "c.à.s", "vers": "g", "f": 15}, {"de": "c.à.s", "vers": "c.à.c", "f": 3}, {"de": "c.à.c", "vers": "c.à.s", "f": 0.333333}, {"de": "pincée", "vers": "g", "f": 0.3}, {"de": "pincée", "vers": "ml", "f": 0.3}, {"de": "g", "vers": "kg", "f": 0.001}, {"de": "kg", "vers": "g", "f": 1000}, {"de": "ml", "vers": "L", "f": 0.001}, {"de": "L", "vers": "ml", "f": 1000}, {"de": "ml", "vers": "cl", "f": 0.1}, {"de": "cl", "vers": "ml", "f": 10}, {"de": "c.à.c", "vers": "cl", "f": 0.5}, {"de": "c.à.s", "vers": "cl", "f": 1.5}, {"de": "ml", "vers": "g", "f": 1}, {"de": "g", "vers": "ml", "f": 1}], "rayons": ["Fruits & légumes", "Boucherie", "Crèmerie", "Épicerie", "Épices & condiments", "Surgelés"], "defaultPortions": [4, 3, 3]};
+const KEY = 'menus_courses_v1';
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = new Intl.NumberFormat('fr-FR', {style:'currency', currency:'EUR'});
+const eurU = x => new Intl.NumberFormat('fr-FR', {style:'currency', currency:'EUR', minimumFractionDigits: 2, maximumFractionDigits: (x > 0 && x < 0.1) ? 3 : 2}).format(x);
+const num = (x, d = 0) => new Intl.NumberFormat('fr-FR', {maximumFractionDigits: d}).format(x);
+const parseNum = s => { const v = parseFloat(String(s).replace(/\s/g, '').replace(',', '.')); return isNaN(v) ? null : v; };
+const show = v => (v === null || v === undefined || v === '') ? '' : String(v).replace('.', ',');
+const UNITS_R = ['g', 'ml', 'unité', 'c.à.c', 'c.à.s', 'pincée'];
+const UNITS_C = ['g', 'ml', 'unité', 'kg', 'L', 'cl', 'c.à.c', 'c.à.s'];
+
+function initial() {
+  return {v: 1, cats: SEED.cats, plats: clone(SEED.plats), recipes: clone(SEED.recipes), catalogue: clone(SEED.catalogue),
+    conversions: clone(SEED.conversions), rayons: clone(SEED.rayons), defaultPortions: clone(SEED.defaultPortions),
+    planning: {}, checks: {}, compareN: 10, sort: 'nom'};
+}
+let S;
+try { const j = localStorage.getItem(KEY); S = j ? JSON.parse(j) : initial(); } catch (e) { S = initial(); }
+if (!S || !S.plats || !S.catalogue || !S.recipes) S = initial();
+S.planning = S.planning || {}; S.checks = S.checks || {}; S.compareN = S.compareN || 10; S.sort = S.sort || 'nom';
+let CI = null;
+function save() { CI = null; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+// ------------------------------------------------------------ calculs
+function convFactor(i) {
+  if (i.manual !== null && i.manual !== '' && i.manual !== undefined) return +i.manual;
+  if (i.unit === i.cunit) return 1;
+  const c = S.conversions.find(x => x.de === i.unit && x.vers === i.cunit);
+  return c ? +c.f : null;
+}
+function compute(i) {
+  const f = convFactor(i);
+  const kcalU = (i.kcal !== '' && i.kcal !== null && i.kcal !== undefined && +i.per > 0) ? i.kcal / i.per : null;
+  const costU = (+i.price > 0 && +i.content > 0 && f != null && !isNaN(f)) ? i.price / i.content * f : null;
+  let issue = '';
+  if (!i.unit || !i.cunit) issue = 'unités manquantes';
+  else if (kcalU === null) issue = 'calories manquantes';
+  else if (!(+i.price > 0)) issue = 'prix manquant';
+  else if (!(+i.content > 0)) issue = 'contenu manquant';
+  else if (f == null || isNaN(f)) issue = 'conversion ' + i.unit + ' → ' + i.cunit + ' manquante (Réglages ou équivalence manuelle)';
+  return Object.assign({}, i, {f, kcalU, costU, issue});
+}
+function info(name) {
+  if (!CI) CI = new Map(S.catalogue.map(i => [i.name, compute(i)]));
+  return CI.get(name) || null;
+}
+function platStats(name) {
+  const lines = (S.recipes[name] || []).filter(l => l.ing);
+  let kcal = 0, cost = 0, issues = 0;
+  for (const l of lines) {
+    const i = info(l.ing);
+    if (!i || i.issue) issues++;
+    if (i) { kcal += (+l.qty || 0) * (i.kcalU || 0); cost += (+l.qty || 0) * (i.costU || 0); }
+  }
+  return {kcal, cost, issues, n: lines.length};
+}
+function alertHTML(st) {
+  if (st.n === 0) return '<div class="warn">⚠ aucun ingrédient saisi pour ce plat</div>';
+  if (st.issues > 0) return '<div class="warn">⚠ données incomplètes (voir Recettes / Catalogue)</div>';
+  return '';
+}
+
+// ------------------------------------------------------------ semaines
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear(); const w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7);
+  return {y, w};
+}
+function mondayOfToday() {
+  const n = new Date(); const d = new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() || 7) - 1)); return d;
+}
+let cur = mondayOfToday();
+const wkKey = d => { const {y, w} = isoWeek(d); return y + '-W' + String(w).padStart(2, '0'); };
+function weekData(create) {
+  const k = wkKey(cur);
+  if (!S.planning[k] && create) S.planning[k] = {plats: [null, null, null], portions: [...S.defaultPortions]};
+  return S.planning[k] || {plats: [null, null, null], portions: [...S.defaultPortions]};
+}
+function shopping(wd) {
+  const tot = new Map();
+  for (let i = 0; i < 3; i++) {
+    const p = wd.plats[i]; if (!p) continue;
+    for (const l of (S.recipes[p] || [])) if (l.ing) tot.set(l.ing, (tot.get(l.ing) || 0) + (+l.qty || 0) * wd.portions[i]);
+  }
+  const rows = [...tot].map(([name, q]) => {
+    const i = info(name);
+    return {name, q, qty: Math.ceil(Math.round(q * 1e6) / 1e6), unit: i ? i.unit : '?', rayon: i ? i.rayon : 'Autres', cost: q * (i && i.costU ? i.costU : 0)};
+  });
+  const order = [...S.rayons, 'Autres'];
+  const groups = [];
+  for (const r of order) {
+    const rs = rows.filter(x => (order.includes(x.rayon) ? x.rayon : 'Autres') === r).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    if (rs.length) groups.push({rayon: r, rows: rs});
+  }
+  return groups;
+}
+
+// ------------------------------------------------------------ vues
+let TAB = 'week';
+const TABS = [['week', '🛒', 'Semaine'], ['cmp', '📊', 'Comparatif'], ['rec', '🍲', 'Recettes'], ['cat', '📦', 'Catalogue'], ['set', '⚙️', 'Réglages']];
+const TITLES = {week: 'Semaine', cmp: 'Comparatif', rec: 'Recettes', cat: 'Catalogue', set: 'Réglages'};
+
+function viewWeek() {
+  const wd = weekData(false); const {y, w} = isoWeek(cur);
+  const end = new Date(cur); end.setUTCDate(end.getUTCDate() + 6);
+  const fd = (d, o) => d.toLocaleDateString('fr-FR', Object.assign({timeZone: 'UTC'}, o));
+  const isNow = wkKey(cur) === wkKey(mondayOfToday());
+  let h = `<div class="weeknav"><button class="n" data-a="prevWeek" aria-label="Semaine précédente">‹</button>
+    <div class="t"><b>Semaine ${w}</b><span class="muted">${fd(cur, {day:'numeric', month:'short'})} – ${fd(end, {day:'numeric', month:'short', year:'numeric'})}</span>
+    ${isNow ? '' : '<br><button class="btn ghost small" data-a="today" style="margin-top:6px">Aujourd’hui</button>'}</div>
+    <button class="n" data-a="nextWeek" aria-label="Semaine suivante">›</button></div>`;
+  let sk = 0, sc = 0, sp = 0;
+  for (let i = 0; i < 3; i++) {
+    const name = wd.plats[i]; const st = name ? platStats(name) : null;
+    if (st) { sk += wd.portions[i] * st.kcal; sc += wd.portions[i] * st.cost; sp += wd.portions[i]; }
+    const opts = S.plats.filter(p => p.cat === i).map(p => `<option value="${esc(p.name)}" ${p.name === name ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+    h += `<section class="card cat c${i}"><div class="cat-t">${esc(S.cats[i])}</div>
+      <select class="edit" data-c="pick" data-i="${i}"><option value="">— choisir un plat —</option>${opts}</select>
+      ${name ? `<div class="row"><div class="stepper"><button data-a="step" data-i="${i}" data-d="-1" aria-label="Moins">−</button><b>${wd.portions[i]}</b><button data-a="step" data-i="${i}" data-d="1" aria-label="Plus">+</button><span class="muted">portions</span></div>
+      <div class="muted">${num(st.kcal)} kcal · ${eur.format(st.cost)} / portion</div></div>${alertHTML(st)}` : ''}</section>`;
+  }
+  h += `<section class="card"><div class="cat-t">Bilan de la semaine</div><div class="sum">
+    <div><b>${sp ? num(sk / sp) : '–'}</b><span>kcal / repas</span></div>
+    <div><b>${sp ? eur.format(sc / sp) : '–'}</b><span>coût / repas</span></div>
+    <div><b>${sp ? eur.format(sc) : '–'}</b><span>coût de la semaine</span></div></div>
+    <div class="muted" style="margin-top:8px">${sp} repas. Le coût compte la part de chaque paquet réellement utilisée, pas le prix des paquets entiers.</div></section>`;
+  const groups = shopping(wd); const ck = S.checks[wkKey(cur)] || {};
+  h += `<section class="card"><div class="cat-t">Liste de courses</div>`;
+  if (!groups.length) h += '<div class="muted">Choisis au moins un plat pour voir la liste.</div>';
+  for (const g of groups) {
+    h += `<h4>${esc(g.rayon)} <span class="muted">(${g.rows.length})</span></h4>`;
+    for (const r of g.rows) {
+      const d = !!ck[r.name];
+      h += `<label class="chk ${d ? 'done' : ''}"><input type="checkbox" data-c="check" data-n="${esc(r.name)}" ${d ? 'checked' : ''}><span class="nm">${esc(r.name)}</span><span class="qt">${num(r.qty)} ${esc(r.unit)}</span><span class="pr">${eur.format(r.cost)}</span></label>`;
+    }
+  }
+  if (groups.length) h += '<div class="row"><span class="muted">Coche ce que tu as déjà ou pris en magasin.</span><button class="btn ghost small" data-a="uncheck">Tout décocher</button></div>';
+  return h + '</section>';
+}
+
+function viewCmp() {
+  let h = `<section class="card"><div class="cat-t">Trier les plats</div><div class="seg">
+    ${[['nom', 'Ordre'], ['prix', 'Prix'], ['kcal', 'Calories']].map(([k, t]) => `<button class="${S.sort === k ? 'on' : ''}" data-a="sort" data-s="${k}">${t}</button>`).join('')}</div>
+    <label class="f">Nombre de repas pour le coût total<input class="edit" inputmode="numeric" data-c="compareN" value="${S.compareN}"></label>
+    <div class="muted" style="margin-top:8px">Fond bleu = meilleur de sa catégorie (le moins cher, le moins calorique). Touche un plat pour voir sa recette.</div></section>`;
+  for (let i = 0; i < 3; i++) {
+    let rows = S.plats.filter(p => p.cat === i).map(p => ({name: p.name, st: platStats(p.name)}));
+    const ok = rows.filter(r => r.st.n > 0);
+    const minK = Math.min(...ok.map(r => r.st.kcal)), minC = Math.min(...ok.map(r => r.st.cost));
+    if (S.sort === 'prix') rows.sort((a, b) => a.st.cost - b.st.cost);
+    if (S.sort === 'kcal') rows.sort((a, b) => a.st.kcal - b.st.kcal);
+    h += `<section class="card cat c${i}"><div class="cat-t">${esc(S.cats[i])}</div><table class="tbl"><tr><th>Plat</th><th>kcal</th><th>€ / portion</th><th>€ × ${S.compareN}</th></tr>`;
+    for (const r of rows) {
+      const has = r.st.n > 0;
+      h += `<tr><td data-a="openPlat" data-name="${esc(r.name)}">${esc(r.name)}${has && r.st.issues ? '<div class="warn">⚠ données incomplètes</div>' : ''}${!has ? '<div class="warn">⚠ aucun ingrédient</div>' : ''}</td>
+        <td>${has ? `<span class="${r.st.kcal === minK ? 'hl' : ''}">${num(r.st.kcal)}</span>` : '–'}</td>
+        <td>${has ? `<span class="${r.st.cost === minC ? 'hl' : ''}">${num(r.st.cost, 2)}</span>` : '–'}</td>
+        <td>${has ? num(r.st.cost * S.compareN, 2) : '–'}</td></tr>`;
+    }
+    h += '</table></section>';
+  }
+  return h;
+}
+
+function viewRec() {
+  let h = '<div style="margin:12px"><button class="btn" data-a="newPlat">+ Nouveau plat</button></div>';
+  for (let i = 0; i < 3; i++) {
+    h += `<section class="card cat c${i}"><div class="cat-t">${esc(S.cats[i])}</div>`;
+    const ps = S.plats.filter(p => p.cat === i);
+    if (!ps.length) h += '<div class="muted">Aucun plat dans cette catégorie.</div>';
+    for (const p of ps) {
+      const st = platStats(p.name);
+      h += `<div class="item" data-a="openPlat" data-name="${esc(p.name)}"><div class="nm">${esc(p.name)}<div class="sub">${st.n} ingrédients · ${num(st.kcal)} kcal · ${eur.format(st.cost)} / portion</div>${st.n === 0 || st.issues ? '<div class="warn">⚠ à compléter</div>' : ''}</div><span class="muted">›</span></div>`;
+    }
+    h += '</section>';
+  }
+  return h;
+}
+
+let SEARCH = '';
+function catListHTML() {
+  const q = SEARCH.trim().toLowerCase();
+  const list = S.catalogue.filter(i => !q || i.name.toLowerCase().includes(q)).sort((a, b) =>
+    (S.rayons.indexOf(a.rayon) - S.rayons.indexOf(b.rayon)) || a.name.localeCompare(b.name, 'fr'));
+  if (!list.length) return '<div class="muted">Aucun ingrédient trouvé.</div>';
+  return list.map(i => {
+    const c = info(i.name);
+    const unitPrice = c.costU === null ? '–' : (['g', 'ml'].includes(c.unit) ? eurU(c.costU * 100) + ' / 100 ' + c.unit : eurU(c.costU) + ' / ' + c.unit);
+    return `<div class="item" data-a="openIng" data-name="${esc(i.name)}"><div class="nm">${esc(i.name)}<div class="sub">${esc(i.rayon)} · ${c.kcalU === null ? '–' : num(c.kcalU * (['g', 'ml'].includes(c.unit) ? 100 : 1), 1) + ' kcal / ' + (['g', 'ml'].includes(c.unit) ? '100 ' : '') + c.unit} · ${unitPrice}</div>${c.issue ? `<div class="warn">⚠ ${esc(c.issue)}</div>` : ''}</div><span class="muted">›</span></div>`;
+  }).join('');
+}
+function viewCat() {
+  return `<section class="card"><input class="edit" id="search" placeholder="Rechercher un ingrédient…" value="${esc(SEARCH)}" data-c="search">
+    <div class="row"><span class="muted">${S.catalogue.length} ingrédients</span><button class="btn small" data-a="newIng">+ Ingrédient</button></div>
+    <div id="catlist" style="margin-top:6px">${catListHTML()}</div></section>`;
+}
+
+let installEvt = null;
+function viewSet() {
+  let h = `<section class="card"><div class="cat-t">Sauvegarde</div>
+    <div class="muted">Tes données sont enregistrées uniquement sur ce téléphone. Sauvegarde-les de temps en temps, surtout avant de changer de téléphone.</div>
+    <div class="row"><button class="btn" data-a="export">Sauvegarder mes données</button><button class="btn ghost" data-a="importBtn">Restaurer…</button></div></section>`;
+  h += `<section class="card"><div class="cat-t">Installation</div>${installEvt
+    ? '<button class="btn" data-a="install">Installer l’application</button>'
+    : '<div class="muted">Dans Chrome : menu ⋮ puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »).</div>'}</section>`;
+  h += `<section class="card"><div class="cat-t">Portions par défaut (nouvelle semaine)</div><div class="two" style="grid-template-columns:repeat(3,1fr)">
+    ${S.cats.map((c, i) => `<label class="f">${esc(c)}<input class="edit" inputmode="numeric" data-c="defPortion" data-i="${i}" value="${S.defaultPortions[i]}"></label>`).join('')}</div></section>`;
+  h += `<section class="card"><div class="cat-t">Rayons (ordre de la liste de courses)</div>`;
+  S.rayons.forEach((r, i) => {
+    const used = S.catalogue.some(x => x.rayon === r);
+    h += `<div class="ray"><span>${esc(r)}</span><button data-a="rayUp" data-i="${i}" aria-label="Monter">▲</button><button data-a="rayDown" data-i="${i}" aria-label="Descendre">▼</button><button data-a="rayDel" data-i="${i}" aria-label="Supprimer" ${used ? 'disabled style="opacity:.35"' : ''}>✕</button></div>`;
+  });
+  h += `<div class="row"><input class="edit" id="newray" placeholder="Nouveau rayon" style="flex:1"><button class="btn small" data-a="rayAdd">Ajouter</button></div></section>`;
+  h += `<section class="card"><div class="cat-t">Conversions d'unités</div>
+    <div class="muted">« 1 De = Facteur Vers ». Sert à calculer le prix d'une unité de recette quand le paquet s'achète dans une autre unité (ex. moutarde en pot de g, utilisée en c.à.c).</div><div style="margin-top:10px">`;
+  S.conversions.forEach((c, i) => {
+    h += `<div class="rowx"><select class="edit" data-c="convDe" data-i="${i}">${UNITS_C.map(u => `<option ${u === c.de ? 'selected' : ''}>${u}</option>`).join('')}</select>
+      <select class="edit" data-c="convVers" data-i="${i}">${UNITS_C.map(u => `<option ${u === c.vers ? 'selected' : ''}>${u}</option>`).join('')}</select>
+      <input class="edit" inputmode="decimal" data-c="convF" data-i="${i}" value="${show(c.f)}"><button class="x" data-a="convDel" data-i="${i}" aria-label="Supprimer">✕</button></div>`;
+  });
+  h += `</div><button class="btn ghost small" data-a="convAdd">+ Ajouter une conversion</button></section>`;
+  h += `<section class="card"><div class="cat-t">Réinitialiser</div><div class="muted">Remet tous les plats, recettes, prix et semaines à l'état d'origine. Irréversible : sauvegarde d'abord.</div>
+    <button class="btn danger" data-a="reset">Réinitialiser l'application</button></section>`;
+  return h;
+}
+
+function render(keep) {
+  const y = window.scrollY;
+  document.getElementById('ttl').textContent = TITLES[TAB];
+  document.getElementById('tabs').innerHTML = TABS.map(([k, ic, t]) => `<button class="${TAB === k ? 'on' : ''}" data-a="tab" data-t="${k}"><i>${ic}</i>${t}</button>`).join('');
+  document.getElementById('view').innerHTML = ({week: viewWeek, cmp: viewCmp, rec: viewRec, cat: viewCat, set: viewSet})[TAB]();
+  window.scrollTo(0, keep ? y : 0);
+}
+
+// ------------------------------------------------------------ fenêtres
+let M = null;
+const modalEl = document.getElementById('modal');
+function ingOptions(sel) {
+  const sorted = [...S.catalogue].sort((a, b) => (S.rayons.indexOf(a.rayon) - S.rayons.indexOf(b.rayon)) || a.name.localeCompare(b.name, 'fr'));
+  let o = `<option value="" ${sel ? '' : 'selected'}>— choisir —</option>`;
+  if (sel && !S.catalogue.some(x => x.name === sel)) o += `<option value="${esc(sel)}" selected>⚠ ${esc(sel)} (absent du catalogue)</option>`;
+  return o + sorted.map(i => `<option value="${esc(i.name)}" ${i.name === sel ? 'selected' : ''}>${esc(i.name)}</option>`).join('');
+}
+function lineHTML(l, idx) {
+  const i = l.ing ? info(l.ing) : null;
+  return `<div class="line"><select class="edit" data-c="lineIng" data-idx="${idx}">${ingOptions(l.ing)}</select>
+    <input class="edit" inputmode="decimal" data-c="lineQty" data-idx="${idx}" value="${show(l.qty)}"><span class="u">${esc(i ? i.unit : '')}</span>
+    <button class="x" data-a="delLine" data-idx="${idx}" aria-label="Supprimer la ligne">✕</button>${i && i.issue ? `<div class="warn">⚠ ${esc(i.issue)}</div>` : ''}${l.ing && !i ? '<div class="warn">⚠ ingrédient absent du catalogue</div>' : ''}</div>`;
+}
+function pstatsHTML(name) {
+  const st = platStats(name);
+  return `<b>${num(st.kcal)} kcal</b> et <b>${eur.format(st.cost)}</b> par portion${alertHTML(st)}`;
+}
+function sheet(title, body) {
+  return `<div class="sheet"><div class="sheet-h"><b>${esc(title)}</b><button class="x" data-a="closeModal" aria-label="Fermer">✕</button></div><div class="sheet-b">${body}</div></div>`;
+}
+function platModalHTML(name) {
+  const p = S.plats.find(x => x.name === name); const lines = S.recipes[name] || [];
+  return sheet(name, `<label class="f">Nom du plat<input class="edit" data-c="platName" value="${esc(name)}"></label>
+    <label class="f">Catégorie<select class="edit" data-c="platCat">${S.cats.map((c, i) => `<option value="${i}" ${p.cat === i ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+    <h3>Ingrédients (quantité par portion)</h3><div id="lines">${lines.map(lineHTML).join('')}</div>
+    <button class="btn ghost" data-a="addLine">+ Ajouter un ingrédient</button>
+    <div class="stats" id="pstats">${pstatsHTML(name)}</div><button class="btn danger" data-a="delPlat">Supprimer ce plat</button>`);
+}
+function selOpts(list, sel) { return list.map(u => `<option ${u === sel ? 'selected' : ''}>${u}</option>`).join(''); }
+function icalcHTML(name) {
+  const c = info(name); if (!c) return '';
+  const base = ['g', 'ml'].includes(c.unit);
+  return `<b>Calculé</b><br>Calories : ${c.kcalU === null ? '–' : num(c.kcalU * (base ? 100 : 1), 1) + ' kcal / ' + (base ? '100 ' : '') + c.unit}<br>
+    Facteur de conversion : ${c.f == null || isNaN(c.f) ? '–' : num(c.f, 4)} (1 ${esc(c.unit)} = … ${esc(c.cunit)})<br>
+    Coût : ${c.costU === null ? '–' : eurU(c.costU * (base ? 100 : 1)) + ' / ' + (base ? '100 ' : '') + c.unit}${c.issue ? `<div class="warn">⚠ ${esc(c.issue)}</div>` : ''}`;
+}
+function ingModalHTML(name) {
+  const i = S.catalogue.find(x => x.name === name);
+  return sheet(name, `<label class="f">Nom<input class="edit" data-c="ingF" data-f="name" value="${esc(i.name)}"></label>
+    <div class="two"><label class="f">Rayon<select class="edit" data-c="ingF" data-f="rayon">${selOpts(S.rayons, i.rayon)}</select></label>
+    <label class="f">Unité de recette<select class="edit" data-c="ingF" data-f="unit">${selOpts(UNITS_R, i.unit)}</select></label></div>
+    <h3>Calories</h3><div class="two"><label class="f">Kcal pour…<input class="edit" inputmode="decimal" data-c="ingF" data-f="kcal" value="${show(i.kcal)}"></label>
+    <label class="f">…cette quantité (en unité de recette)<input class="edit" inputmode="decimal" data-c="ingF" data-f="per" value="${show(i.per)}"></label></div>
+    <h3>Prix</h3><label class="f">Conditionnement d'achat (texte libre)<input class="edit" data-c="ingF" data-f="pack" value="${esc(i.pack)}"></label>
+    <div class="two"><label class="f">Prix du conditionnement (€)<input class="edit" inputmode="decimal" data-c="ingF" data-f="price" value="${show(i.price)}"></label>
+    <label class="f">Contenu<input class="edit" inputmode="decimal" data-c="ingF" data-f="content" value="${show(i.content)}"></label></div>
+    <div class="two"><label class="f">Unité du contenu<select class="edit" data-c="ingF" data-f="cunit">${selOpts(UNITS_C, i.cunit)}</select></label>
+    <label class="f">Équivalence manuelle (1 unité de recette = … unité du contenu)<input class="edit" inputmode="decimal" data-c="ingF" data-f="manual" value="${show(i.manual)}"></label></div>
+    <div class="calc" id="icalc">${icalcHTML(i.name)}</div><button class="btn danger" data-a="delIng">Supprimer cet ingrédient</button>`);
+}
+function nameModalHTML(kind) {
+  const isP = kind === 'newplat';
+  return sheet(isP ? 'Nouveau plat' : 'Nouvel ingrédient', `<label class="f">Nom<input class="edit" id="newname" autocomplete="off"></label>
+    ${isP ? `<label class="f">Catégorie<select class="edit" id="newcat">${S.cats.map((c, i) => `<option value="${i}">${esc(c)}</option>`).join('')}</select></label>` : ''}
+    <div style="margin-top:16px"><button class="btn" data-a="${isP ? 'createPlat' : 'createIng'}">Créer</button></div>`);
+}
+function renderModal() {
+  if (!M) { modalEl.hidden = true; modalEl.innerHTML = ''; return; }
+  modalEl.hidden = false;
+  modalEl.innerHTML = ({plat: () => platModalHTML(M.name), ing: () => ingModalHTML(M.name), newplat: () => nameModalHTML('newplat'), newing: () => nameModalHTML('newing')})[M.type]();
+}
+function openModal(m) { M = m; if (!(history.state && history.state.m)) history.pushState({m: 1}, ''); renderModal(); if (m.type.startsWith('new')) setTimeout(() => { const e = document.getElementById('newname'); e && e.focus(); }, 50); }
+function closeModal(keep) { if (history.state && history.state.m) history.back(); else { M = null; renderModal(); } render(true); }
+window.addEventListener('popstate', () => { M = null; renderModal(); render(true); });
+
+let toastT;
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); }
+const nameTaken = (list, n, except) => list.some(x => x.name.toLowerCase() === n.toLowerCase() && x.name !== except);
+
+// ------------------------------------------------------------ actions
+const A = {
+  tab: t => { TAB = t.dataset.t; render(); },
+  prevWeek: () => { cur.setUTCDate(cur.getUTCDate() - 7); render(); },
+  nextWeek: () => { cur.setUTCDate(cur.getUTCDate() + 7); render(); },
+  today: () => { cur = mondayOfToday(); render(); },
+  step: t => { const wd = weekData(true); const i = +t.dataset.i; wd.portions[i] = Math.max(0, Math.min(30, wd.portions[i] + (+t.dataset.d))); save(); render(true); },
+  uncheck: () => { delete S.checks[wkKey(cur)]; save(); render(true); },
+  sort: t => { S.sort = t.dataset.s; save(); render(true); },
+  openPlat: t => openModal({type: 'plat', name: t.dataset.name}),
+  newPlat: () => openModal({type: 'newplat'}),
+  newIng: () => openModal({type: 'newing'}),
+  openIng: t => openModal({type: 'ing', name: t.dataset.name}),
+  closeModal: () => closeModal(),
+  addLine: () => { (S.recipes[M.name] = S.recipes[M.name] || []).push({ing: '', qty: 1}); save(); refreshLines(); },
+  delLine: t => { S.recipes[M.name].splice(+t.dataset.idx, 1); save(); refreshLines(); },
+  delPlat: () => {
+    if (!confirm('Supprimer le plat « ' + M.name + ' » ?')) return;
+    S.plats = S.plats.filter(p => p.name !== M.name); delete S.recipes[M.name];
+    for (const k in S.planning) S.planning[k].plats = S.planning[k].plats.map(p => p === M.name ? null : p);
+    save(); closeModal(); toast('Plat supprimé');
+  },
+  createPlat: () => {
+    const n = document.getElementById('newname').value.trim(); if (!n) return toast('Écris un nom');
+    if (nameTaken(S.plats, n)) return toast('Ce plat existe déjà');
+    S.plats.push({name: n, cat: +document.getElementById('newcat').value}); S.recipes[n] = []; save();
+    M = {type: 'plat', name: n}; renderModal(); render(true);
+  },
+  createIng: () => {
+    const n = document.getElementById('newname').value.trim(); if (!n) return toast('Écris un nom');
+    if (nameTaken(S.catalogue, n)) return toast('Cet ingrédient existe déjà');
+    S.catalogue.push({name: n, rayon: S.rayons[0], unit: 'g', kcal: '', per: 100, pack: '', price: '', content: '', cunit: 'g', manual: ''}); save();
+    M = {type: 'ing', name: n}; renderModal(); render(true);
+  },
+  delIng: () => {
+    const used = Object.entries(S.recipes).filter(([p, ls]) => ls.some(l => l.ing === M.name)).map(([p]) => p);
+    if (used.length) return toast('Utilisé dans : ' + used.join(', '));
+    if (!confirm('Supprimer l’ingrédient « ' + M.name + ' » ?')) return;
+    S.catalogue = S.catalogue.filter(i => i.name !== M.name); save(); closeModal(); toast('Ingrédient supprimé');
+  },
+  rayUp: t => { const i = +t.dataset.i; if (i > 0) { [S.rayons[i - 1], S.rayons[i]] = [S.rayons[i], S.rayons[i - 1]]; save(); render(true); } },
+  rayDown: t => { const i = +t.dataset.i; if (i < S.rayons.length - 1) { [S.rayons[i + 1], S.rayons[i]] = [S.rayons[i], S.rayons[i + 1]]; save(); render(true); } },
+  rayDel: t => { const r = S.rayons[+t.dataset.i]; if (S.catalogue.some(x => x.rayon === r)) return toast('Rayon utilisé par des ingrédients'); S.rayons.splice(+t.dataset.i, 1); save(); render(true); },
+  rayAdd: () => { const e = document.getElementById('newray'); const n = e.value.trim(); if (!n) return; if (S.rayons.includes(n)) return toast('Ce rayon existe déjà'); S.rayons.push(n); save(); render(true); },
+  convDel: t => { S.conversions.splice(+t.dataset.i, 1); save(); render(true); },
+  convAdd: () => { S.conversions.push({de: 'c.à.c', vers: 'g', f: 1}); save(); render(true); },
+  export: () => {
+    const b = new Blob([JSON.stringify(S, null, 1)], {type: 'application/json'}); const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'menus-courses-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Sauvegarde téléchargée');
+  },
+  importBtn: () => document.getElementById('file').click(),
+  reset: () => { if (!confirm('Tout remettre à l’état d’origine ? Tes modifications seront perdues.')) return; S = initial(); save(); render(); toast('Application réinitialisée'); },
+  install: async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(true); }
+};
+function refreshLines() {
+  const ls = S.recipes[M.name] || [];
+  document.getElementById('lines').innerHTML = ls.map(lineHTML).join('');
+  document.getElementById('pstats').innerHTML = pstatsHTML(M.name);
+}
+function refreshIng() { document.getElementById('icalc').innerHTML = icalcHTML(M.name); }
+
+const C = {
+  pick: t => { const wd = weekData(true); wd.plats[+t.dataset.i] = t.value || null; save(); render(true); },
+  check: t => { const k = wkKey(cur); (S.checks[k] = S.checks[k] || {})[t.dataset.n] = t.checked; if (!t.checked) delete S.checks[k][t.dataset.n]; save(); render(true); },
+  compareN: t => { const v = parseNum(t.value); S.compareN = v && v > 0 ? Math.round(v) : 10; save(); render(true); },
+  defPortion: t => { const v = parseNum(t.value); S.defaultPortions[+t.dataset.i] = v !== null && v >= 0 ? Math.round(v) : S.defaultPortions[+t.dataset.i]; save(); render(true); },
+  platName: t => {
+    const n = t.value.trim(); if (!n || n === M.name) { t.value = M.name; return; }
+    if (nameTaken(S.plats, n, M.name)) { toast('Ce nom existe déjà'); t.value = M.name; return; }
+    S.plats.find(p => p.name === M.name).name = n; S.recipes[n] = S.recipes[M.name]; delete S.recipes[M.name];
+    for (const k in S.planning) S.planning[k].plats = S.planning[k].plats.map(p => p === M.name ? n : p);
+    M.name = n; save(); renderModal(); render(true);
+  },
+  platCat: t => { const p = S.plats.find(x => x.name === M.name); p.cat = +t.value;
+    for (const k in S.planning) { const w = S.planning[k]; w.plats = w.plats.map((x, i) => x === M.name && i !== p.cat ? null : x); }
+    save(); render(true); },
+  lineIng: t => { S.recipes[M.name][+t.dataset.idx].ing = t.value; save(); refreshLines(); },
+  lineQty: t => { const v = parseNum(t.value); S.recipes[M.name][+t.dataset.idx].qty = v === null ? 0 : v; save(); t.value = show(v === null ? 0 : v); document.getElementById('pstats').innerHTML = pstatsHTML(M.name); },
+  ingF: t => {
+    const i = S.catalogue.find(x => x.name === M.name); const f = t.dataset.f;
+    if (f === 'name') {
+      const n = t.value.trim(); if (!n || n === i.name) { t.value = i.name; return; }
+      if (nameTaken(S.catalogue, n, i.name)) { toast('Ce nom existe déjà'); t.value = i.name; return; }
+      for (const ls of Object.values(S.recipes)) for (const l of ls) if (l.ing === i.name) l.ing = n;
+      i.name = n; M.name = n; save(); renderModal(); render(true); return;
+    }
+    if (['kcal', 'per', 'price', 'content', 'manual'].includes(f)) { const v = parseNum(t.value); i[f] = v === null ? '' : v; t.value = show(i[f]); }
+    else i[f] = t.value;
+    if (f === 'rayon' || f === 'unit') save(); else save();
+    refreshIng();
+  },
+  convDe: t => { S.conversions[+t.dataset.i].de = t.value; save(); },
+  convVers: t => { S.conversions[+t.dataset.i].vers = t.value; save(); },
+  convF: t => { const v = parseNum(t.value); S.conversions[+t.dataset.i].f = v === null ? 0 : v; save(); t.value = show(S.conversions[+t.dataset.i].f); }
+};
+document.addEventListener('click', e => { const t = e.target.closest('[data-a]'); if (t && A[t.dataset.a]) A[t.dataset.a](t, e); });
+document.addEventListener('change', e => { const t = e.target.closest('[data-c]'); if (t && C[t.dataset.c]) C[t.dataset.c](t, e); });
+document.addEventListener('input', e => { if (e.target.id === 'search') { SEARCH = e.target.value; document.getElementById('catlist').innerHTML = catListHTML(); } });
+modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+document.getElementById('file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !d.plats || !d.catalogue || !d.recipes) throw new Error('format');
+      if (!confirm('Remplacer toutes tes données par cette sauvegarde ?')) return;
+      S = d; S.planning = S.planning || {}; S.checks = S.checks || {}; save(); render(); toast('Données restaurées');
+    } catch (err) { toast('Fichier de sauvegarde invalide'); }
+    e.target.value = '';
+  };
+  r.readAsText(f);
+});
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (TAB === 'set') render(true); });
+window.addEventListener('appinstalled', () => { installEvt = null; });
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+render();
+</script>
+</body>
+</html>
