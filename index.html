@@ -26,32 +26,32 @@ h3{margin:18px 0 8px;color:var(--blue);font-size:15px}
 h4{margin:14px 0 4px;color:var(--blue);font-size:13px;text-transform:uppercase;letter-spacing:.04em}
 .muted{color:var(--muted);font-size:13px}
 .warn{color:var(--warn);font-weight:600;font-size:13px;margin-top:6px}
-select.edit,input.edit{width:100%;background:var(--input);border:1px solid var(--inputb);border-radius:10px;padding:10px;font-size:16px;color:var(--text);font-family:inherit}
+select.edit,input.edit{min-height:44px;width:100%;background:var(--input);border:1px solid var(--inputb);border-radius:10px;padding:10px;font-size:16px;color:var(--text);font-family:inherit}
 label.f{display:block;margin:10px 0 0;font-size:13px;color:var(--muted)}
 label.f .edit{margin-top:4px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
 .stepper{display:flex;align-items:center;gap:10px}
-.stepper button{width:38px;height:38px;border-radius:50%;border:1px solid var(--blue2);background:#fff;color:var(--blue);font-size:22px;line-height:1}
+.stepper button{width:44px;height:44px;border-radius:50%;border:1px solid var(--blue2);background:#fff;color:var(--blue);font-size:22px;line-height:1}
 .stepper b{min-width:22px;text-align:center;font-size:17px}
 .weeknav{display:flex;align-items:center;justify-content:space-between;margin:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
-.weeknav button.n{width:44px;height:44px;border:0;background:transparent;font-size:26px;color:var(--blue)}
+.weeknav button.n{width:48px;height:48px;border:0;background:transparent;font-size:26px;color:var(--blue)}
 .weeknav .t{text-align:center}
 .weeknav .t b{display:block;font-size:17px;color:var(--blue)}
-.btn{display:inline-block;border:0;border-radius:10px;background:var(--blue);color:#fff;padding:11px 16px;font-size:15px;font-weight:600;font-family:inherit}
+.btn{min-height:44px;display:inline-block;border:0;border-radius:10px;background:var(--blue);color:#fff;padding:11px 16px;font-size:15px;font-weight:600;font-family:inherit}
 .btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue2)}
 .btn.danger{background:#fff;color:var(--warn);border:1px solid var(--warn);margin-top:18px}
-.btn.small{padding:8px 12px;font-size:13px}
+.btn.small{min-height:40px;padding:8px 14px;font-size:14px}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .sum div{background:var(--bg);border-radius:10px;padding:10px 4px}
 .sum b{display:block;font-size:17px;color:var(--blue)}
-.sum span{font-size:12px;color:var(--muted)}
-.chk{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.sum span{font-size:13px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;padding:12px 2px;min-height:52px;border-bottom:1px solid var(--line)}
 .chk input{width:24px;height:24px;accent-color:var(--blue);flex:none}
 .chk .nm{flex:1}
 .chk .qt{font-weight:600;white-space:nowrap}
 .chk .pr{color:var(--muted);font-size:13px;min-width:52px;text-align:right}
 .chk.done .nm,.chk.done .qt,.chk.done .pr{text-decoration:line-through;color:#98a2ab}
-.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.item{display:flex;align-items:center;gap:10px;padding:14px 2px;min-height:56px;border-bottom:1px solid var(--line);cursor:pointer}
 .item .nm{flex:1}
 .item .sub{color:var(--muted);font-size:13px}
 .hl{background:var(--blue3);border-radius:6px;padding:1px 6px;font-weight:700}
@@ -61,10 +61,10 @@ label.f .edit{margin-top:4px}
 .tbl td{padding:11px 2px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
 .tbl td:first-child{white-space:normal;cursor:pointer}
 .seg{display:flex;gap:6px;margin:8px 0}
-.seg button{flex:1;padding:9px;border:1px solid var(--blue2);background:#fff;color:var(--blue);border-radius:10px;font-weight:600;font-size:14px}
+.seg button{flex:1;min-height:44px;padding:9px;border:1px solid var(--blue2);background:#fff;color:var(--blue);border-radius:10px;font-weight:600;font-size:14px}
 .seg button.on{background:var(--blue);color:#fff}
 nav#tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
-nav#tabs button{flex:1;border:0;background:transparent;padding:8px 2px 7px;font-size:11px;color:var(--muted);font-family:inherit}
+nav#tabs button{flex:1;min-width:0;border:0;background:transparent;padding:8px 2px 7px;font-size:12px;color:var(--muted);font-family:inherit}
 nav#tabs button i{display:block;font-style:normal;font-size:22px;line-height:1.2}
 nav#tabs button.on{color:var(--blue);font-weight:700}
 #modal{position:fixed;inset:0;z-index:20;background:rgba(15,30,45,.45)}
@@ -73,18 +73,35 @@ nav#tabs button.on{color:var(--blue);font-weight:700}
 .sheet-h{position:sticky;top:0;background:var(--blue);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2}
 .sheet-h b{font-size:17px}
 .sheet-b{padding:6px 14px calc(30px + env(safe-area-inset-bottom))}
-.x{border:0;background:transparent;color:inherit;font-size:20px;padding:6px 8px}
+.x{min-width:44px;min-height:44px;border:0;background:transparent;color:inherit;font-size:20px;padding:6px 8px}
 .sheet-b .x{color:var(--muted)}
-.line{display:grid;grid-template-columns:1fr 78px 44px 32px;gap:6px;align-items:center;margin-bottom:8px}
-.line .warn{grid-column:1/-1;margin:-2px 0 4px}
-.line .u{color:var(--muted);font-size:13px}
+.line{display:grid;grid-template-columns:minmax(0,1fr) 60px 44px;gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.line>*{min-width:0}
+.line select{grid-column:1/-1}
+.line .warn{grid-column:1/-1;margin:0}
+.line .u{color:var(--muted);font-size:14px}
 .stats{margin-top:16px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
 .calc{margin-top:14px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.6}
-.rowx{display:grid;grid-template-columns:1fr 1fr 80px 34px;gap:6px;margin-bottom:6px;align-items:center}
+.rowx{display:grid;grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr) 44px;gap:6px;margin-bottom:6px;align-items:center}
+.rowx.hdr{font-size:13px;color:var(--muted);margin-bottom:2px}
 .ray{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}
 .ray span{flex:1}
-.ray button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;color:var(--blue)}
+.ray button{border:1px solid var(--line);background:#fff;border-radius:8px;width:44px;height:44px;color:var(--blue)}
+
+.pc{padding:14px 0;border-top:1px solid var(--line);cursor:pointer}
+.cat-t+.pc{border-top:0;padding-top:4px}
+.pc-n{font-weight:600;font-size:16px;margin-bottom:10px;line-height:1.3}
+.pc-s{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.st{background:var(--bg);border-radius:10px;padding:10px 4px;text-align:center}
+.st b{display:block;font-size:17px;color:var(--text)}
+.st span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.st.best{background:var(--blue3)}
+.st.best b{color:var(--blue)}
+.tags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:var(--blue3);color:var(--blue);font-weight:700;font-size:13px;border-radius:999px;padding:4px 12px}
+img,svg{max-width:100%}
+@media (max-width:340px){nav#tabs button{font-size:11px}nav#tabs button i{font-size:20px}.sheet-b{padding-left:10px;padding-right:10px}}
 #toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:30;max-width:90%;text-align:center}
 #toast.on{opacity:.95}
 </style>
@@ -244,22 +261,26 @@ function viewCmp() {
   let h = `<section class="card"><div class="cat-t">Trier les plats</div><div class="seg">
     ${[['nom', 'Ordre'], ['prix', 'Prix'], ['kcal', 'Calories']].map(([k, t]) => `<button class="${S.sort === k ? 'on' : ''}" data-a="sort" data-s="${k}">${t}</button>`).join('')}</div>
     <label class="f">Nombre de repas pour le coût total<input class="edit" inputmode="numeric" data-c="compareN" value="${S.compareN}"></label>
-    <div class="muted" style="margin-top:8px">Fond bleu = meilleur de sa catégorie (le moins cher, le moins calorique). Touche un plat pour voir sa recette.</div></section>`;
+    <div class="muted" style="margin-top:8px">Case bleue = le meilleur de sa catégorie (le moins cher, le moins calorique). Touche un plat pour voir sa recette.</div></section>`;
   for (let i = 0; i < 3; i++) {
     let rows = S.plats.filter(p => p.cat === i).map(p => ({name: p.name, st: platStats(p.name)}));
     const ok = rows.filter(r => r.st.n > 0);
     const minK = Math.min(...ok.map(r => r.st.kcal)), minC = Math.min(...ok.map(r => r.st.cost));
     if (S.sort === 'prix') rows.sort((a, b) => a.st.cost - b.st.cost);
     if (S.sort === 'kcal') rows.sort((a, b) => a.st.kcal - b.st.kcal);
-    h += `<section class="card cat c${i}"><div class="cat-t">${esc(S.cats[i])}</div><table class="tbl"><tr><th>Plat</th><th>kcal</th><th>€ / portion</th><th>€ × ${S.compareN}</th></tr>`;
+    const multi = ok.length >= 2;
+    h += `<section class="card cat c${i}"><div class="cat-t">${esc(S.cats[i])}</div>`;
     for (const r of rows) {
       const has = r.st.n > 0;
-      h += `<tr><td data-a="openPlat" data-name="${esc(r.name)}">${esc(r.name)}${has && r.st.issues ? '<div class="warn">⚠ données incomplètes</div>' : ''}${!has ? '<div class="warn">⚠ aucun ingrédient</div>' : ''}</td>
-        <td>${has ? `<span class="${r.st.kcal === minK ? 'hl' : ''}">${num(r.st.kcal)}</span>` : '–'}</td>
-        <td>${has ? `<span class="${r.st.cost === minC ? 'hl' : ''}">${num(r.st.cost, 2)}</span>` : '–'}</td>
-        <td>${has ? num(r.st.cost * S.compareN, 2) : '–'}</td></tr>`;
+      const bk = has && multi && r.st.kcal === minK, bc = has && multi && r.st.cost === minC;
+      h += `<div class="pc" data-a="openPlat" data-name="${esc(r.name)}"><div class="pc-n">${esc(r.name)} <span class="muted">›</span></div>
+        ${has ? `<div class="pc-s"><div class="st ${bk ? 'best' : ''}"><b>${num(r.st.kcal)}</b><span>kcal / portion</span></div>
+        <div class="st ${bc ? 'best' : ''}"><b>${eur.format(r.st.cost)}</b><span>par portion</span></div>
+        <div class="st"><b>${eur.format(r.st.cost * S.compareN)}</b><span>pour ${S.compareN} repas</span></div></div>
+        ${bk || bc ? `<div class="tags">${bc ? '<span class="tag">Le moins cher</span>' : ''}${bk ? '<span class="tag">Le moins calorique</span>' : ''}</div>` : ''}
+        ${r.st.issues ? '<div class="warn">⚠ données incomplètes</div>' : ''}` : '<div class="warn">⚠ aucun ingrédient saisi</div>'}</div>`;
     }
-    h += '</table></section>';
+    h += '</section>';
   }
   return h;
 }
@@ -315,10 +336,12 @@ function viewSet() {
   h += `<div class="row"><input class="edit" id="newray" placeholder="Nouveau rayon" style="flex:1"><button class="btn small" data-a="rayAdd">Ajouter</button></div></section>`;
   h += `<section class="card"><div class="cat-t">Conversions d'unités</div>
     <div class="muted">« 1 De = Facteur Vers ». Sert à calculer le prix d'une unité de recette quand le paquet s'achète dans une autre unité (ex. moutarde en pot de g, utilisée en c.à.c).</div><div style="margin-top:10px">`;
+  h += '<div class="rowx hdr"><span>1 unité de…</span><span>vaut</span><span>…de</span><span></span></div>';
   S.conversions.forEach((c, i) => {
     h += `<div class="rowx"><select class="edit" data-c="convDe" data-i="${i}">${UNITS_C.map(u => `<option ${u === c.de ? 'selected' : ''}>${u}</option>`).join('')}</select>
+      <input class="edit" inputmode="decimal" data-c="convF" data-i="${i}" value="${show(c.f)}">
       <select class="edit" data-c="convVers" data-i="${i}">${UNITS_C.map(u => `<option ${u === c.vers ? 'selected' : ''}>${u}</option>`).join('')}</select>
-      <input class="edit" inputmode="decimal" data-c="convF" data-i="${i}" value="${show(c.f)}"><button class="x" data-a="convDel" data-i="${i}" aria-label="Supprimer">✕</button></div>`;
+      <button class="x" data-a="convDel" data-i="${i}" aria-label="Supprimer">✕</button></div>`;
   });
   h += `</div><button class="btn ghost small" data-a="convAdd">+ Ajouter une conversion</button></section>`;
   h += `<section class="card"><div class="cat-t">Réinitialiser</div><div class="muted">Remet tous les plats, recettes, prix et semaines à l'état d'origine. Irréversible : sauvegarde d'abord.</div>
