@@ -139,10 +139,41 @@ img,svg{max-width:100%}
 @media (max-width:340px){nav#tabs button{font-size:10px;padding-left:0;padding-right:0}nav#tabs button i{font-size:20px}.sheet-b{padding-left:10px;padding-right:10px}}
 #toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:30;max-width:90%;text-align:center}
 #toast.on{opacity:.95}
+header#top{align-items:center;justify-content:space-between;padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:6px}
+header#top h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px}
+.sw{display:flex;gap:2px;flex:none;background:rgba(255,255,255,.18);border-radius:12px;padding:3px}
+.sw button{min-height:44px;border:0;background:transparent;color:#fff;border-radius:9px;padding:0 10px;font-size:13px;font-weight:600;font-family:inherit}
+.sw button.on{background:#fff;color:var(--blue)}
+body.run header#top{background:#0F6C8C}
+body.run .sw button.on{color:#0F6C8C}
+body.run{--blue:#0F5F7E;--blue2:#2B8CAF;--blue3:#CBE6F1}
+body.run header#top{background:#0F6C8C}
+.dots{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--blue2);background:#fff}
+.dot.on{background:var(--blue);border-color:var(--blue)}
+.lgs{display:flex;flex-wrap:wrap;margin-top:4px}
+.lg{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;margin:0 6px 6px 0;font-family:inherit;color:var(--text)}
+.lg.off{opacity:.45;text-decoration:line-through}
+.ax{font-size:11px;fill:#5b6770;font-family:inherit}
+.axs{font-size:10px;fill:#5b6770;font-family:inherit}
+.sel{margin-top:10px;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:14px;line-height:1.5}
+.sel .row{margin-top:6px}
+.big{font-size:26px;font-weight:700;color:var(--blue);line-height:1.2}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.kv b{white-space:nowrap}
+.sub{color:var(--muted);font-size:13px}
+.item svg.g{flex:none}
+.item .nm b{display:block;line-height:1.35}
+.hint{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45}
+.tbl.r td,.tbl.r th{padding-left:3px;padding-right:3px}
+.tbl.r td:first-child{white-space:nowrap;cursor:default}
+.tbl.r th:first-child{width:36%}
+input[type=date].edit{appearance:none;-webkit-appearance:none;min-width:0}
+
 </style>
 </head>
 <body>
-<header id="top"><h1 id="ttl"></h1><small>Menus et courses</small></header>
+<header id="top"><h1 id="ttl"></h1><div class="sw" id="sw"></div></header>
 <main id="view"></main>
 <nav id="tabs"></nav>
 <div id="modal" hidden></div>
@@ -162,7 +193,7 @@ const UNITS_R = ['g', 'ml', 'unité', 'c.à.c', 'c.à.s', 'pincée'];
 const UNITS_C = ['g', 'ml', 'unité', 'kg', 'L', 'cl', 'c.à.c', 'c.à.s'];
 
 function initial() {
-  return {v: 2, eq: {}, dur: {}, extras: {}, recur: [], freeze: {}, kettle: false, run: null, cats: SEED.cats, plats: clone(SEED.plats).map(p => { delete p.new; return p; }), recipes: clone(SEED.recipes), catalogue: clone(SEED.catalogue),
+  return {v: 2, mode: 'meal', runs: [], weigh: [], obj: {}, rhide: {}, rrange: '12', eq: {}, dur: {}, extras: {}, recur: [], freeze: {}, kettle: false, run: null, cats: SEED.cats, plats: clone(SEED.plats).map(p => { delete p.new; return p; }), recipes: clone(SEED.recipes), catalogue: clone(SEED.catalogue),
     conversions: clone(SEED.conversions), rayons: clone(SEED.rayons), defaultPortions: clone(SEED.defaultPortions),
     planning: {}, checks: {}, compareN: 10, sort: 'nom'};
 }
@@ -171,6 +202,15 @@ try { const j = localStorage.getItem(KEY); S = j ? JSON.parse(j) : initial(); } 
 if (!S || !S.plats || !S.catalogue || !S.recipes) S = initial();
 S.planning = S.planning || {}; S.checks = S.checks || {}; S.compareN = S.compareN || 10; S.sort = S.sort || 'nom';
 S.dur = S.dur || {}; S.kettle = !!S.kettle; S.run = S.run || null; S.extras = S.extras || {}; S.recur = S.recur || []; S.freeze = S.freeze || {};
+function ensureRun() {
+  S.mode = S.mode === 'run' ? 'run' : 'meal';
+  S.runs = Array.isArray(S.runs) ? S.runs : []; S.weigh = Array.isArray(S.weigh) ? S.weigh : [];
+  const o = S.obj = S.obj || {};
+  if (!(o.sess >= 1)) o.sess = 3; if (!(o.kg > 0)) o.kg = 79; if (!(o.efLo > 0)) o.efLo = 140; if (!(o.efHi > 0)) o.efHi = 155;
+  if (!o.race) o.race = '2027-09-26'; if (!(o.target > 0)) o.target = 240;
+  S.rhide = S.rhide || {}; S.rrange = S.rrange || '12';
+}
+ensureRun();
 let MIGR = '';
 const EQ_KEYS = ['cookeo', 'four', 'feu', 'air'];
 function migrate() {
@@ -750,16 +790,19 @@ function viewSet() {
       <button class="x" data-a="convDel" data-i="${i}" aria-label="Supprimer">✕</button></div>`;
   });
   h += `</div><button class="btn ghost small" data-a="convAdd">+ Ajouter une conversion</button></section>`;
-  h += `<section class="card"><div class="cat-t">Réinitialiser</div><div class="muted">Remet tous les plats, recettes, prix et semaines à l'état d'origine. Irréversible : sauvegarde d'abord.</div>
+  h += `<section class="card"><div class="cat-t">Réinitialiser</div><div class="muted">Remet tous les plats, recettes, prix et semaines à l'état d'origine (tes séances et pesées de course sont conservées). Irréversible : sauvegarde d'abord.</div>
     <button class="btn danger" data-a="reset">Réinitialiser l'application</button></section>`;
   return h;
 }
 
 function render(keep) {
   const y = window.scrollY;
-  document.getElementById('ttl').textContent = TITLES[TAB];
-  document.getElementById('tabs').innerHTML = TABS.map(([k, ic, t]) => `<button class="${TAB === k ? 'on' : ''}" data-a="tab" data-t="${k}"><i>${ic}</i>${t}</button>`).join('');
-  document.getElementById('view').innerHTML = ({week: viewWeek, steps: viewSteps, cmp: viewCmp, rec: viewRec, cat: viewCat, set: viewSet})[TAB]();
+  const run = S.mode === 'run';
+  document.body.classList.toggle('run', run);
+  document.getElementById('ttl').textContent = run ? RTITLES[RTAB] : TITLES[TAB];
+  document.getElementById('sw').innerHTML = [['meal', '🍽️', 'Repas'], ['run', '🏃', 'Course']].map(([k, i, tt]) => `<button class="${S.mode === k ? 'on' : ''}" data-a="mode" data-m="${k}" aria-label="Mode ${tt}">${i} ${tt}</button>`).join('');
+  document.getElementById('tabs').innerHTML = (run ? RTABS : TABS).map(([k, ic, tt]) => `<button class="${(run ? RTAB : TAB) === k ? 'on' : ''}" data-a="${run ? 'rtab' : 'tab'}" data-t="${k}"><i>${ic}</i>${tt}</button>`).join('');
+  document.getElementById('view').innerHTML = run ? ({dash: viewRunDash, sess: viewRunSess, weigh: viewRunWeigh, rset: viewRunSet})[RTAB]() : ({week: viewWeek, steps: viewSteps, cmp: viewCmp, rec: viewRec, cat: viewCat, set: viewSet})[TAB]();
   window.scrollTo(0, keep ? y : 0);
 }
 
@@ -824,7 +867,7 @@ function nameModalHTML(kind) {
 function renderModal() {
   if (!M) { modalEl.hidden = true; modalEl.innerHTML = ''; return; }
   modalEl.hidden = false;
-  modalEl.innerHTML = ({plat: () => platModalHTML(M.name), ing: () => ingModalHTML(M.name), newplat: () => nameModalHTML('newplat'), newing: () => nameModalHTML('newing')})[M.type]();
+  modalEl.innerHTML = ({plat: () => platModalHTML(M.name), ing: () => ingModalHTML(M.name), newplat: () => nameModalHTML('newplat'), newing: () => nameModalHTML('newing'), runf: runFormHTML, weighf: weighFormHTML})[M.type]();
 }
 function openModal(m) { M = m; if (!(history.state && history.state.m)) history.pushState({m: 1}, ''); renderModal(); if (m.type.startsWith('new')) setTimeout(() => { const e = document.getElementById('newname'); e && e.focus(); }, 50); }
 function closeModal(keep) { if (history.state && history.state.m) history.back(); else { M = null; renderModal(); } render(true); }
@@ -910,7 +953,7 @@ const A = {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Sauvegarde téléchargée');
   },
   importBtn: () => document.getElementById('file').click(),
-  reset: () => { if (!confirm('Tout remettre à l’état d’origine ? Tes modifications seront perdues.')) return; S = initial(); save(); render(); toast('Application réinitialisée'); },
+  reset: () => { if (!confirm('Tout remettre à l’état d’origine ? Tes modifications seront perdues (tes séances et pesées de course sont conservées).')) return; const kp = {runs: S.runs, weigh: S.weigh, obj: S.obj, rhide: S.rhide, rrange: S.rrange, mode: S.mode}; S = Object.assign(initial(), kp); ensureRun(); save(); render(); toast('Application réinitialisée'); },
   install: async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(true); }
 };
 function refreshLines() {
@@ -978,7 +1021,7 @@ document.getElementById('file').addEventListener('change', e => {
       const d = JSON.parse(r.result);
       if (!d || !d.plats || !d.catalogue || !d.recipes) throw new Error('format');
       if (!confirm('Remplacer toutes tes données par cette sauvegarde ?')) return;
-      S = d; S.planning = S.planning || {}; S.checks = S.checks || {}; migrate(); save(); render(); toast(MIGR ? 'Données restaurées et mises à jour' : 'Données restaurées');
+      S = d; S.planning = S.planning || {}; S.checks = S.checks || {}; ensureRun(); migrate(); save(); render(); toast(MIGR ? 'Données restaurées et mises à jour' : 'Données restaurées');
     } catch (err) { toast('Fichier de sauvegarde invalide'); }
     e.target.value = '';
   };
@@ -1017,7 +1060,486 @@ setInterval(() => {
     else { const nowM = (Date.now() - r.t0) / 60000; document.querySelectorAll('[data-cd]').forEach(e => { const k = e.dataset.cd; if (r.began[k] !== undefined) e.textContent = cdText(r.began[k] + (r.dl[k] || 0) - nowM); }); }
   }
 }, 1000);
+// ============================================================ MODE COURSE
+const RTYPES = [
+  {k: 'ef', n: 'Endurance fondamentale', s: 'EF', c: '#0072B2', sh: 'c'},
+  {k: 'sl', n: 'Sortie longue', s: 'Longue', c: '#E69F00', sh: 's'},
+  {k: 'fr', n: 'Fractionné', s: 'Frac.', c: '#CC79A7', sh: 't'},
+  {k: 'rc', n: 'Récupération', s: 'Récup.', c: '#009E73', sh: 'd'},
+  {k: 'co', n: 'Course / chrono', s: 'Chrono', c: '#D55E00', sh: 'x'},
+  {k: 'au', n: 'Autre', s: 'Autre', c: '#6b7780', sh: 'p'}
+];
+const RT_BY = Object.fromEntries(RTYPES.map(t => [t.k, t]));
+const rty = r => RT_BY[r.type] ? r.type : 'au';
+const RTABS = [['dash', '📈', 'Suivi'], ['sess', '🏃', 'Séances'], ['weigh', '⚖️', 'Pesées'], ['rset', '⚙️', 'Réglages']];
+const RTITLES = {dash: 'Suivi', sess: 'Séances', weigh: 'Pesées', rset: 'Réglages'};
+let RTAB = 'dash', RSEL = null, RALL = false, RW = null;
+
+// ---------- dates
+const dnOf = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? Math.floor(Date.UTC(+m[1], m[2] - 1, +m[3]) / 86400000) : null; };
+const isoOf = dn => new Date(dn * 86400000).toISOString().slice(0, 10);
+const todayDn = () => { const n = new Date(); return Math.floor(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / 86400000); };
+const monOf = dn => dn - ((dn + 3) % 7);
+const fdn = (dn, o) => new Date(dn * 86400000).toLocaleDateString('fr-FR', Object.assign({timeZone: 'UTC'}, o));
+const f1 = v => +Number(v).toFixed(1);
+
+// ---------- formats
+const fPace = s => { if (!(s > 0) || !isFinite(s)) return '–'; s = Math.round(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const fDur = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? h + ':' + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0') : m + ':' + String(x).padStart(2, '0'); };
+const fTot = s => { s = Math.round(s / 60); const h = Math.floor(s / 60), m = s % 60; return h ? h + ' h ' + String(m).padStart(2, '0') : m + ' min'; };
+const sgn = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + num(Math.abs(v), d);
+
+// ---------- données
+const runsAsc = () => [...S.runs].sort((a, b) => dnOf(a.d) - dnOf(b.d) || (a.id > b.id ? 1 : -1));
+const weighAsc = () => [...S.weigh].sort((a, b) => dnOf(a.d) - dnOf(b.d) || (a.id > b.id ? 1 : -1));
+function rangeFrom() {
+  const T = todayDn();
+  if (S.rrange === '4') return monOf(T) - 21;
+  if (S.rrange === '12') return monOf(T) - 77;
+  const ds = [...S.runs, ...S.weigh].map(x => dnOf(x.d)).filter(x => x !== null);
+  return ds.length ? Math.min(...ds) : T - 28;
+}
+const visRuns = () => { const f = rangeFrom(); return runsAsc().filter(r => dnOf(r.d) >= f && !S.rhide[rty(r)]); };
+function weekAgg(m) {
+  const rs = S.runs.filter(r => { const d = dnOf(r.d); return d >= m && d < m + 7; });
+  const a = {n: rs.length, km: 0, s: 0, kcal: 0, bs: 0, bt: 0, rs};
+  for (const r of rs) { a.km += r.km; a.s += r.s; a.kcal += r.kcal || 0; if (r.bpm > 0) { a.bs += r.bpm * r.s; a.bt += r.s; } }
+  a.pace = a.km > 0 ? a.s / a.km : 0; a.bpm = a.bt > 0 ? a.bs / a.bt : 0;
+  return a;
+}
+function streakInfo() {
+  const T = monOf(todayDn()), o = S.obj.sess;
+  if (!S.runs.length) return {n: 0, ok: 0, tot: 0};
+  const first = monOf(Math.min(...S.runs.map(r => dnOf(r.d))));
+  let n = 0, m = T;
+  if (weekAgg(m).n >= o) n = 1;
+  m -= 7;
+  while (m >= first && weekAgg(m).n >= o) { n++; m -= 7; }
+  let ok = 0, tot = 0;
+  for (let w = first; w < T; w += 7) { tot++; if (weekAgg(w).n >= o) ok++; }
+  return {n, ok, tot};
+}
+function trendKg(ws) {
+  if (ws.length < 2) return null;
+  const last = dnOf(ws[ws.length - 1].d);
+  const pts = ws.filter(w => last - dnOf(w.d) <= 42);
+  if (pts.length < 2 || dnOf(pts[pts.length - 1].d) - dnOf(pts[0].d) < 7) return null;
+  const n = pts.length, xs = pts.map(p => dnOf(p.d)), ys = pts.map(p => p.kg);
+  const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+  let nu = 0, de = 0; for (let i = 0; i < n; i++) { nu += (xs[i] - mx) * (ys[i] - my); de += (xs[i] - mx) ** 2; }
+  return de ? nu / de * 7 : null;
+}
+function projection() {
+  const from = todayDn() - 84; let best = null;
+  for (const r of S.runs) {
+    if (dnOf(r.d) < from || r.km < 5 || !['co', 'ef', 'sl', 'au'].includes(rty(r))) continue;
+    const t = r.s * Math.pow(42.195 / r.km, 1.06);
+    if (!best || t < best.t) best = {t, r};
+  }
+  return best;
+}
+const median = a => { const b = [...a].sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : null; };
+
+// ---------- dessin
+function glyph(sh, x, y, r, c, op) {
+  op = op == null ? 1 : op;
+  const fl = `fill="${c}" fill-opacity="${op}" stroke="#fff" stroke-width="1"`;
+  if (sh === 'c') return `<circle cx="${x}" cy="${y}" r="${r}" ${fl}/>`;
+  if (sh === 's') return `<rect x="${f1(x - r)}" y="${f1(y - r)}" width="${f1(2 * r)}" height="${f1(2 * r)}" ${fl}/>`;
+  if (sh === 't') return `<path d="M${x} ${f1(y - r * 1.25)}L${f1(x + r * 1.15)} ${f1(y + r * .85)}L${f1(x - r * 1.15)} ${f1(y + r * .85)}Z" ${fl}/>`;
+  if (sh === 'd') return `<path d="M${x} ${f1(y - r * 1.35)}L${f1(x + r * 1.35)} ${y}L${x} ${f1(y + r * 1.35)}L${f1(x - r * 1.35)} ${y}Z" ${fl}/>`;
+  if (sh === 'x') return `<path d="M${f1(x - r)} ${f1(y - r)}L${f1(x + r)} ${f1(y + r)}M${f1(x + r)} ${f1(y - r)}L${f1(x - r)} ${f1(y + r)}" stroke="${c}" stroke-opacity="${op}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  return `<path d="M${f1(x - r)} ${y}H${f1(x + r)}M${x} ${f1(y - r)}V${f1(y + r)}" stroke="${c}" stroke-opacity="${op}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+}
+const tyGlyph = (k, sz) => { const t = RT_BY[k] || RT_BY.au; sz = sz || 18; return `<svg class="g" width="${sz}" height="${sz}" viewBox="-8 -8 16 16" aria-hidden="true">${glyph(t.sh, 0, 0, 5.2, t.c, 1)}</svg>`; };
+function niceTicks(lo, hi, n, steps) {
+  if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+  const raw = (hi - lo) / n; let step;
+  if (steps) step = steps.find(s => s >= raw) || steps[steps.length - 1];
+  else { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+  const a = Math.floor(lo / step + 1e-9) * step, b = Math.ceil(hi / step - 1e-9) * step, t = [];
+  for (let v = a; v <= b + step * 1e-6; v += step) t.push(+v.toFixed(6));
+  return t;
+}
+function dateAxis(ds) {
+  let lo = Math.min(...ds), hi = Math.max(...ds);
+  if (hi - lo < 6) { const c = (lo + hi) / 2; lo = Math.floor(c - 3); hi = Math.ceil(c + 3); }
+  const pad = Math.max(1, Math.round((hi - lo) * .03)); lo -= pad; hi += pad;
+  const n = Math.min(4, hi - lo), ticks = [];
+  for (let i = 0; i <= n; i++) { const v = Math.round(lo + i * (hi - lo) / n); if (!ticks.includes(v)) ticks.push(v); }
+  return {lo, hi, ticks};
+}
+function plot(o) {
+  const W = 320, H = o.H || 200, L = o.L || 44, R = 10, Tm = 12, B = 26, pw = W - L - R, ph = H - Tm - B;
+  const sx = v => f1(L + (v - o.xlo) / (o.xhi - o.xlo) * pw);
+  const sy = v => f1(o.inv ? Tm + (v - o.ylo) / (o.yhi - o.ylo) * ph : Tm + ph - (v - o.ylo) / (o.yhi - o.ylo) * ph);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(o.label)}" style="display:block;overflow:visible">`;
+  for (const b of o.bands || []) {
+    const lo = Math.max(b.lo, o.ylo), hi = Math.min(b.hi, o.yhi); if (hi <= lo) continue;
+    const y1 = sy(lo), y2 = sy(hi), top = Math.min(y1, y2);
+    s += `<rect x="${L}" y="${top}" width="${pw}" height="${f1(Math.abs(y2 - y1))}" fill="${b.c}" fill-opacity=".13"/><text class="axs" x="${W - R - 3}" y="${f1(top + 11)}" text-anchor="end">${esc(b.label)}</text>`;
+  }
+  for (const t of o.yticks) { const y = sy(t); s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="#E3E9EF"/><text class="ax" x="${L - 5}" y="${f1(+y + 4)}" text-anchor="end">${o.yfmt(t)}</text>`; }
+  for (const t of o.xticks) { const x = sx(t); s += `<line x1="${x}" x2="${x}" y1="${Tm + ph}" y2="${Tm + ph + 4}" stroke="#9aa5ae"/><text class="ax" x="${x}" y="${H - 8}" text-anchor="middle">${o.xfmt(t)}</text>`; }
+  s += `<line x1="${L}" x2="${W - R}" y1="${Tm + ph}" y2="${Tm + ph}" stroke="#9aa5ae"/>`;
+  for (const v of o.vlines || []) { const x = sx(v.v); s += `<line x1="${x}" x2="${x}" y1="${Tm}" y2="${Tm + ph}" stroke="${v.c}" stroke-dasharray="4 3"/><text class="axs" x="${x}" y="${Tm - 2}" text-anchor="middle">${esc(v.label)}</text>`; }
+  for (const hl of o.hlines || []) { if (hl.v < o.ylo || hl.v > o.yhi) continue; const y = sy(hl.v); s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${hl.c}" stroke-dasharray="5 3" stroke-width="1.5"/><text class="axs" x="${W - R - 2}" y="${f1(+y - 4)}" text-anchor="end" fill="${hl.c}" style="fill:${hl.c}">${esc(hl.label)}</text>`; }
+  s += o.draw(sx, sy, {L, W, R, Tm, ph, pw}) + '</svg>';
+  return s;
+}
+function ptsLayer(rs, sx, sy, xf, yf, opf) {
+  let s = '', n = rs.length;
+  rs.forEach((r, i) => {
+    const t = RT_BY[rty(r)], x = sx(xf(r)), y = sy(yf(r)), op = opf ? opf(i, n) : 1;
+    if (RSEL === r.id) s += `<circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>`;
+    s += glyph(t.sh, x, y, 5, t.c, op);
+  });
+  rs.forEach(r => { s += `<circle cx="${sx(xf(r))}" cy="${sy(yf(r))}" r="16" fill="transparent" data-a="rsel" data-id="${esc(r.id)}"/>`; });
+  return s;
+}
+const selPanel = () => {
+  const r = RSEL && S.runs.find(x => x.id === RSEL);
+  if (!r) return '<div class="hint">Touche un point pour voir la séance.</div>';
+  const t = RT_BY[rty(r)];
+  return `<div class="sel"><b>${esc(fdn(dnOf(r.d), {weekday: 'short', day: 'numeric', month: 'short'}))}</b> · ${esc(t.n)}<br>${num(r.km, 2)} km · ${fDur(r.s)} · ${fPace(r.s / r.km)} /km${r.bpm ? ' · ' + r.bpm + ' bpm' : ''}${r.bmax ? ' (max ' + r.bmax + ')' : ''}${r.kcal ? ' · ' + num(r.kcal) + ' kcal' : ''}
+    <div class="row"><button class="btn ghost small" data-a="runEdit" data-id="${esc(r.id)}">Modifier</button></div></div>`;
+};
+const noData = t => `<div class="hint" style="padding:10px 0">${t}</div>`;
+
+// ---------- graphiques
+function chartWeeks() {
+  const T = monOf(todayDn()), from = rangeFrom(), ws = [];
+  for (let m = monOf(from); m <= T; m += 7) ws.push(m);
+  const data = ws.map(m => { const by = {}; let tot = 0; for (const r of S.runs) { const d = dnOf(r.d); if (d >= m && d < m + 7 && !S.rhide[rty(r)]) { by[rty(r)] = (by[rty(r)] || 0) + r.km; tot += r.km; } } return {m, by, tot}; });
+  if (!data.some(d => d.tot > 0)) return noData('Aucune séance à afficher sur cette période.');
+  const yt = niceTicks(0, Math.max(...data.map(d => d.tot)), 4), yhi = yt[yt.length - 1];
+  const W = 320, H = 200, L = 38, R = 8, Tm = 14, B = 26, pw = W - L - R, ph = H - Tm - B, slot = pw / ws.length, bw = Math.max(3, Math.min(34, slot * .72));
+  const sy = v => f1(Tm + ph - v / yhi * ph);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Distance par semaine" style="display:block">`;
+  for (const t of yt) s += `<line x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}" stroke="#E3E9EF"/><text class="ax" x="${L - 5}" y="${f1(+sy(t) + 4)}" text-anchor="end">${num(t, 1)}</text>`;
+  const every = Math.max(1, Math.ceil(30 / slot));
+  data.forEach((d, i) => {
+    const cx = L + slot * (i + .5), x0 = f1(cx - bw / 2); let acc = 0;
+    for (const t of RTYPES) { const v = d.by[t.k]; if (!v) continue; const y1 = sy(acc + v), y2 = sy(acc); s += `<rect x="${x0}" y="${y1}" width="${f1(bw)}" height="${f1(y2 - y1)}" fill="${t.c}"/>`; acc += v; }
+    if (slot >= 17 && d.tot > 0) s += `<text class="axs" x="${f1(cx)}" y="${f1(+sy(d.tot) - 3)}" text-anchor="middle">${num(d.tot, 0)}</text>`;
+    if ((ws.length - 1 - i) % every === 0) s += `<text class="axs" x="${f1(cx)}" y="${H - 9}" text-anchor="middle">${fdn(d.m, {day: 'numeric', month: 'numeric'})}</text>`;
+    s += `<rect x="${f1(cx - slot / 2)}" y="${Tm}" width="${f1(slot)}" height="${ph}" fill="transparent" data-a="rweek" data-m="${d.m}"/>`;
+  });
+  s += `<line x1="${L}" x2="${W - R}" y1="${Tm + ph}" y2="${Tm + ph}" stroke="#9aa5ae"/></svg>`;
+  return s;
+}
+function chartPace() {
+  const rs = visRuns(); if (!rs.length) return noData('Aucune séance à afficher. Ajoute une séance ou réactive un type.');
+  const p = rs.map(r => r.s / r.km), yt = niceTicks(Math.min(...p) * .97, Math.max(...p) * 1.03, 4, [5, 10, 15, 20, 30, 60, 120]);
+  const ax = dateAxis(rs.map(r => dnOf(r.d)));
+  return plot({label: 'Allure par séance', xlo: ax.lo, xhi: ax.hi, xticks: ax.ticks, xfmt: v => fdn(v, {day: 'numeric', month: 'short'}), ylo: yt[0], yhi: yt[yt.length - 1], yticks: yt, yfmt: fPace, inv: true,
+    draw: (sx, sy) => {
+      const line = rs.length > 1 ? `<polyline points="${rs.map(r => sx(dnOf(r.d)) + ',' + sy(r.s / r.km)).join(' ')}" fill="none" stroke="#9aa5ae" stroke-opacity=".5" stroke-width="1.2"/>` : '';
+      return line + ptsLayer(rs, sx, sy, r => dnOf(r.d), r => r.s / r.km);
+    }});
+}
+function chartBpm() {
+  const all = visRuns(), rs = all.filter(r => r.bpm > 0); if (!rs.length) return noData('Aucune FC renseignée sur les séances affichées.');
+  const o = S.obj, vals = rs.map(r => r.bpm).concat(rs.map(r => r.bmax || r.bpm), [o.efLo, o.efHi]);
+  const yt = niceTicks(Math.min(...vals) - 3, Math.max(...vals) + 3, 4), ax = dateAxis(rs.map(r => dnOf(r.d)));
+  const svg = plot({label: 'FC moyenne et maximale par séance', xlo: ax.lo, xhi: ax.hi, xticks: ax.ticks, xfmt: v => fdn(v, {day: 'numeric', month: 'short'}), ylo: yt[0], yhi: yt[yt.length - 1], yticks: yt, yfmt: v => num(v),
+    bands: [{lo: o.efLo, hi: o.efHi, c: '#0072B2', label: 'zone EF'}],
+    draw: (sx, sy) => {
+      let s = '';
+      for (const r of rs) if (r.bmax > r.bpm) { const x = sx(dnOf(r.d)), t = RT_BY[rty(r)]; s += `<line x1="${x}" x2="${x}" y1="${sy(r.bpm)}" y2="${sy(r.bmax)}" stroke="${t.c}" stroke-opacity=".5" stroke-width="2"/><circle cx="${x}" cy="${sy(r.bmax)}" r="3.2" fill="#fff" stroke="${t.c}" stroke-width="1.6"/>`; }
+      return s + ptsLayer(rs, sx, sy, r => dnOf(r.d), r => r.bpm);
+    }});
+  return svg + `<div class="hint">Symbole plein = FC moyenne · rond vide = FC max (quand elle est saisie). Bande bleue = ta zone d’endurance fondamentale.${all.length > rs.length ? ' ' + (all.length - rs.length) + ' séance(s) sans FC non affichée(s).' : ''}</div>`;
+}
+function chartScatter() {
+  const rs = visRuns().filter(r => r.bpm > 0); if (!rs.length) return noData('Aucune FC renseignée sur les séances affichées.');
+  const p = rs.map(r => r.s / r.km), b = rs.map(r => r.bpm), o = S.obj;
+  const yt = niceTicks(Math.min(...p) * .97, Math.max(...p) * 1.03, 4, [5, 10, 15, 20, 30, 60, 120]);
+  const xt = niceTicks(Math.min(...b, o.efHi) - 4, Math.max(...b, o.efHi) + 4, 4);
+  return plot({label: 'Allure en fonction de la FC moyenne', xlo: xt[0], xhi: xt[xt.length - 1], xticks: xt, xfmt: v => num(v), ylo: yt[0], yhi: yt[yt.length - 1], yticks: yt, yfmt: fPace, inv: true,
+    vlines: [{v: o.efHi, c: '#0072B2', label: 'plafond EF'}],
+    draw: (sx, sy, g) => `<text class="axs" x="${g.L + 4}" y="${g.Tm + 12}">↖ plus efficace</text>` + ptsLayer(rs, sx, sy, r => r.bpm, r => r.s / r.km, (i, n) => n < 2 ? 1 : .35 + .65 * i / (n - 1))});
+}
+function lineChart(label, pts, o) {
+  if (!pts.length) return noData(o.empty);
+  const ys = pts.map(p => p.y).concat(o.goal != null ? [o.goal] : []);
+  const yt = niceTicks(Math.min(...ys) - (o.pad || 1), Math.max(...ys) + (o.pad || 1), 4), ax = dateAxis(pts.map(p => p.x));
+  return plot({label, xlo: ax.lo, xhi: ax.hi, xticks: ax.ticks, xfmt: v => fdn(v, {day: 'numeric', month: 'short'}), ylo: yt[0], yhi: yt[yt.length - 1], yticks: yt, yfmt: v => num(v, o.dec == null ? 1 : o.dec),
+    hlines: o.goal != null ? [{v: o.goal, c: '#D55E00', label: o.goalLabel}] : [],
+    draw: (sx, sy) => `<polyline points="${pts.map(p => sx(p.x) + ',' + sy(p.y)).join(' ')}" fill="none" stroke="${o.c || '#0F5F7E'}" stroke-width="2"/>` + pts.map(p => `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4" fill="${o.c || '#0F5F7E'}" stroke="#fff" stroke-width="1"/>`).join('')});
+}
+function chartComp() {
+  const f = rangeFrom(), ws = weighAsc().filter(w => w.fat > 0 && dnOf(w.d) >= f);
+  if (!ws.length) return noData('Renseigne le % de masse grasse dans tes pesées pour voir ce graphique.');
+  const fat = ws.map(w => ({x: dnOf(w.d), y: w.kg * w.fat / 100})), lean = ws.map(w => ({x: dnOf(w.d), y: w.kg - w.kg * w.fat / 100}));
+  const all = fat.concat(lean), yt = niceTicks(Math.min(...all.map(p => p.y)) - 2, Math.max(...all.map(p => p.y)) + 2, 4), ax = dateAxis(all.map(p => p.x));
+  return plot({label: 'Masse grasse et masse maigre', xlo: ax.lo, xhi: ax.hi, xticks: ax.ticks, xfmt: v => fdn(v, {day: 'numeric', month: 'short'}), ylo: yt[0], yhi: yt[yt.length - 1], yticks: yt, yfmt: v => num(v),
+    draw: (sx, sy) => [[lean, '#0072B2', 'maigre'], [fat, '#D55E00', 'grasse']].map(([a, c, lab]) => `<polyline points="${a.map(p => sx(p.x) + ',' + sy(p.y)).join(' ')}" fill="none" stroke="${c}" stroke-width="2"/>` + a.map(p => `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="3.6" fill="${c}" stroke="#fff"/>`).join('') + `<text class="axs" style="fill:${c};font-weight:700" x="${sx(a[a.length - 1].x)}" y="${f1(+sy(a[a.length - 1].y) - 8)}" text-anchor="end">${lab}</text>`).join('')}) + '<div class="hint">En kg. Une bonne évolution : la masse grasse baisse, la masse maigre se maintient.</div>';
+}
+const legendHTML = () => `<div class="lgs">${RTYPES.map(t => `<button class="lg ${S.rhide[t.k] ? 'off' : ''}" data-a="rhide" data-k="${t.k}" aria-pressed="${!S.rhide[t.k]}">${tyGlyph(t.k, 14)}${esc(t.s)}</button>`).join('')}</div>`;
+const rangeHTML = () => `<div class="seg">${[['4', '4 sem.'], ['12', '12 sem.'], ['all', 'Tout']].map(([k, t]) => `<button class="${S.rrange === k ? 'on' : ''}" data-a="rrange" data-r="${k}">${t}</button>`).join('')}</div>`;
+
+// ---------- vues
+function viewRunDash() {
+  const T = todayDn(), thisM = monOf(T); if (RW === null) RW = thisM;
+  const o = S.obj, a = weekAgg(RW), {w} = isoWeek(new Date(RW * 86400000));
+  let h = `<div class="weeknav"><button class="n" data-a="rPrev" aria-label="Semaine précédente">‹</button><div class="t"><b>Semaine ${w}</b><span class="muted">${fdn(RW, {day: 'numeric', month: 'short'})} – ${fdn(RW + 6, {day: 'numeric', month: 'short', year: 'numeric'})}</span>${RW === thisM ? '' : '<br><button class="btn ghost small" data-a="rToday" style="margin-top:6px">Cette semaine</button>'}</div><button class="n" data-a="rNext" aria-label="Semaine suivante">›</button></div>`;
+  const dots = Array.from({length: Math.max(o.sess, a.n)}, (_, i) => `<span class="dot ${i < a.n ? 'on' : ''}"></span>`).join('');
+  h += `<section class="card"><div class="cat-t">Séances de la semaine</div>
+    <div class="dots">${dots}<span class="muted" style="margin-left:4px">${a.n} / ${o.sess}${a.n >= o.sess ? ' · objectif atteint' : ''}</span></div>
+    <div class="sum" style="margin-top:12px">
+      <div><b>${num(a.km, 1)}</b><span>km</span></div><div><b>${a.n ? fTot(a.s) : '–'}</b><span>temps</span></div><div><b>${a.n ? fPace(a.pace) : '–'}</b><span>min/km</span></div>
+      <div><b>${a.bpm ? num(a.bpm) : '–'}</b><span>bpm moy.</span></div><div><b>${a.kcal ? num(a.kcal) : '–'}</b><span>kcal</span></div><div><b>${a.n}</b><span>séance${a.n > 1 ? 's' : ''}</span></div></div>
+    <div class="row"><button class="btn small" data-a="runNew">+ Ajouter une séance</button></div></section>`;
+  const st = streakInfo();
+  h += `<section class="card"><div class="cat-t">Régularité</div>${S.runs.length
+    ? `<div class="big">${st.n} semaine${st.n > 1 ? 's' : ''}</div><div class="muted">de suite à ${o.sess} séance${o.sess > 1 ? 's' : ''} ou plus par semaine${st.tot ? ' · ' + st.ok + ' semaine' + (st.ok > 1 ? 's' : '') + ' sur ' + st.tot + ' terminées depuis tes débuts' : ''}</div>`
+    : '<div class="muted">Ajoute ta première séance pour démarrer le suivi.</div>'}</section>`;
+  // poids
+  const ws = weighAsc();
+  h += `<section class="card"><div class="cat-t">Poids</div>`;
+  if (!ws.length) h += `<div class="muted">Aucune pesée enregistrée.</div><div class="row"><button class="btn small" data-a="weighNew">+ Ajouter une pesée</button></div>`;
+  else {
+    const last = ws[ws.length - 1], first = ws[0], rest = last.kg - o.kg, tr = trendKg(ws);
+    h += `<div class="big">${num(last.kg, 1)} kg</div><div class="muted">pesée du ${fdn(dnOf(last.d), {day: 'numeric', month: 'long'})}${last.fat ? ' · ' + num(last.fat, 1) + ' % de masse grasse' : ''}</div>
+      <div class="kv"><span>Depuis ta première pesée (${fdn(dnOf(first.d), {day: 'numeric', month: 'short'})})</span><b>${ws.length > 1 ? sgn(last.kg - first.kg) + ' kg' : '–'}</b></div>
+      <div class="kv"><span>${rest > 0 ? 'Reste à perdre pour ' + num(o.kg, 1) + ' kg' : 'Objectif ' + num(o.kg, 1) + ' kg'}</span><b>${rest > 0 ? num(rest, 1) + ' kg' : 'atteint'}</b></div>
+      <div class="kv"><span>Tendance (6 dernières semaines)</span><b>${tr === null ? '–' : sgn(tr, 2) + ' kg/sem.'}</b></div>`;
+    if (tr !== null && tr < -0.05 && rest > 0) {
+      const wk = rest / -tr; h += `<div class="hint">Si ce rythme se maintient, ${num(o.kg, 1)} kg vers ${wk > 156 ? 'plus de 3 ans' : 'le ' + fdn(dnOf(last.d) + Math.round(wk * 7), {day: 'numeric', month: 'long', year: 'numeric'})}.${-tr > 1.2 ? ' Rythme rapide : surveille ta fatigue et tes articulations.' : ''}</div>`;
+    }
+    h += `<div class="row"><button class="btn small" data-a="weighNew">+ Ajouter une pesée</button></div>`;
+  }
+  h += '</section>';
+  // marathon
+  const rd = dnOf(o.race), days = rd === null ? null : rd - T, pr = projection(), tgt = o.target * 60;
+  h += `<section class="card"><div class="cat-t">Marathon visé${rd !== null ? ' · ' + fdn(rd, {day: 'numeric', month: 'long', year: 'numeric'}) : ''}</div>`;
+  if (days !== null) h += `<div class="big">${days >= 0 ? 'J-' + days : 'Course passée'}</div><div class="muted">${days >= 0 ? 'environ ' + Math.ceil(days / 7) + ' semaines' : ''}</div>`;
+  h += `<div class="kv"><span>Objectif</span><b>${fTot(tgt)}</b></div><div class="kv"><span>Allure à tenir sur 42,195 km</span><b>${fPace(tgt / 42.195)} /km</b></div>`;
+  if (pr) {
+    const gap = pr.t - tgt;
+    h += `<div class="kv"><span>Projection actuelle</span><b>${fTot(pr.t)}</b></div><div class="kv"><span>Écart avec l’objectif</span><b>${gap > 0 ? '+' : '−'}${fTot(Math.abs(gap))}</b></div>
+      <div class="hint">Estimation d’après ta séance du ${fdn(dnOf(pr.r.d), {day: 'numeric', month: 'short'})} (${num(pr.r.km, 1)} km en ${fDur(pr.r.s)}), formule de Riegel. Elle est indicative et en général optimiste pour un premier marathon : une sortie facile donne une projection prudente, un test chrono une projection plus juste.</div>`;
+  } else h += `<div class="hint">Pas encore de séance de 5 km ou plus sur les 12 dernières semaines pour estimer ton temps.</div>`;
+  h += '</section>';
+  // graphiques
+  h += `<section class="card"><div class="cat-t">Graphiques</div><div class="muted">Toutes les séances ensemble, une couleur et une forme par type. Touche un type pour le masquer.</div>${rangeHTML()}${legendHTML()}</section>`;
+  h += `<section class="card"><div class="cat-t">Distance par semaine (km)</div><div class="muted">Touche une semaine pour l’ouvrir.</div>${chartWeeks()}</section>`;
+  h += `<section class="card"><div class="cat-t">Allure par séance</div><div class="muted">↑ plus rapide</div>${chartPace()}${selPanel()}</section>`;
+  h += `<section class="card"><div class="cat-t">FC par séance (bpm)</div>${chartBpm()}${selPanel()}</section>`;
+  h += `<section class="card"><div class="cat-t">Allure selon la FC</div><div class="muted">Plus le point est en haut à gauche, plus tu cours vite avec un cœur calme. Les séances récentes sont plus foncées.</div>${chartScatter()}${selPanel()}</section>`;
+  const f = rangeFrom();
+  h += `<section class="card"><div class="cat-t">Poids (kg)</div>${lineChart('Poids', ws.filter(x => dnOf(x.d) >= f).map(x => ({x: dnOf(x.d), y: x.kg})), {goal: o.kg, goalLabel: 'objectif ' + num(o.kg, 1) + ' kg', empty: 'Aucune pesée sur cette période.'})}</section>`;
+  h += `<section class="card"><div class="cat-t">Masse grasse (%)</div>${lineChart('Masse grasse en pourcentage', ws.filter(x => x.fat > 0 && dnOf(x.d) >= f).map(x => ({x: dnOf(x.d), y: x.fat})), {c: '#D55E00', empty: 'Aucun % de masse grasse sur cette période.'})}</section>`;
+  // répartition
+  const fr = runsAsc().filter(r => dnOf(r.d) >= f);
+  h += `<section class="card"><div class="cat-t">Répartition par type</div>`;
+  if (!fr.length) h += '<div class="muted">Aucune séance sur cette période.</div>';
+  else {
+    h += '<table class="tbl r"><tr><th>Type</th><th>Séances</th><th>km</th><th>Temps</th><th>Allure</th></tr>';
+    for (const t of RTYPES) {
+      const g = fr.filter(r => rty(r) === t.k); if (!g.length) continue;
+      const km = g.reduce((s, r) => s + r.km, 0), sec = g.reduce((s, r) => s + r.s, 0);
+      h += `<tr><td>${tyGlyph(t.k, 14)} ${esc(t.s)}</td><td>${g.length}</td><td>${num(km, 1)}</td><td>${fTot(sec)}</td><td>${fPace(sec / km)}</td></tr>`;
+    }
+    h += '</table>';
+    const ef = fr.filter(r => rty(r) === 'ef' && r.bpm > 0);
+    if (ef.length) {
+      const under = ef.filter(r => r.bpm <= o.efHi).length;
+      h += `<div class="hint">Endurance fondamentale : ${under} séance${under > 1 ? 's' : ''} sur ${ef.length} avec une FC moyenne sous ton plafond de ${o.efHi} bpm. FC moyenne médiane : ${num(median(ef.map(r => r.bpm)))} bpm.</div>`;
+    }
+  }
+  return h + '</section>';
+}
+function viewRunSess() {
+  const rs = [...S.runs].sort((a, b) => dnOf(b.d) - dnOf(a.d) || (b.id > a.id ? 1 : -1));
+  let h = `<section class="card"><button class="btn" data-a="runNew" style="width:100%">+ Ajouter une séance</button><div class="muted" style="margin-top:8px">${rs.length} séance${rs.length > 1 ? 's' : ''} enregistrée${rs.length > 1 ? 's' : ''}. Touche une séance pour la modifier ou la supprimer. Tu peux saisir des séances passées.</div></section>`;
+  if (!rs.length) return h;
+  const shown = RALL ? rs : rs.slice(0, 30), groups = [];
+  for (const r of shown) { const m = monOf(dnOf(r.d)); let g = groups[groups.length - 1]; if (!g || g.m !== m) { g = {m, rs: []}; groups.push(g); } g.rs.push(r); }
+  for (const g of groups) {
+    const a = weekAgg(g.m);
+    h += `<section class="card"><div class="cat-t">Semaine du ${fdn(g.m, {day: 'numeric', month: 'short'})} <span class="muted">· ${a.n} séance${a.n > 1 ? 's' : ''} · ${num(a.km, 1)} km</span></div>`;
+    for (const r of g.rs) {
+      const t = RT_BY[rty(r)], over = rty(r) === 'ef' && r.bpm > S.obj.efHi;
+      h += `<div class="item" data-a="runEdit" data-id="${esc(r.id)}">${tyGlyph(rty(r), 22)}<div class="nm"><b>${num(r.km, 2)} km · ${fDur(r.s)} <span class="muted">· ${fPace(r.s / r.km)} /km</span></b>
+        <div class="sub">${esc(fdn(dnOf(r.d), {weekday: 'short', day: 'numeric', month: 'short'}))} · ${esc(t.n)}<br>${r.bpm ? r.bpm + ' bpm' + (r.bmax ? ' (max ' + r.bmax + ')' : '') : 'FC non renseignée'}${r.kcal ? ' · ' + num(r.kcal) + ' kcal' : ''}${r.rpe ? ' · effort ' + r.rpe + '/10' : ''}${r.note ? '<br>' + esc(r.note) : ''}</div>${over ? `<div class="warn">FC moyenne au-dessus du plafond EF (${S.obj.efHi})</div>` : ''}</div><span class="muted">›</span></div>`;
+    }
+    h += '</section>';
+  }
+  if (!RALL && rs.length > 30) h += `<section class="card"><button class="btn ghost" data-a="rAll" style="width:100%">Afficher les ${rs.length - 30} séances plus anciennes</button></section>`;
+  return h;
+}
+function viewRunWeigh() {
+  const ws = weighAsc();
+  let h = `<section class="card"><button class="btn" data-a="weighNew" style="width:100%">+ Ajouter une pesée</button><div class="muted" style="margin-top:8px">${ws.length} pesée${ws.length > 1 ? 's' : ''}. Une pesée par semaine, le même jour et à la même heure si possible, suffit.</div></section>`;
+  if (!ws.length) return h;
+  h += `<section class="card"><div class="cat-t">Masse grasse et masse maigre</div>${rangeHTML()}${chartComp()}</section>`;
+  h += '<section class="card"><div class="cat-t">Historique</div>';
+  const desc = [...ws].reverse();
+  desc.forEach((w, i) => {
+    const prev = desc[i + 1], fatKg = w.fat > 0 ? w.kg * w.fat / 100 : null;
+    h += `<div class="item" data-a="weighEdit" data-id="${esc(w.id)}"><div class="nm"><b>${num(w.kg, 1)} kg${prev ? ' <span class="muted">· ' + sgn(w.kg - prev.kg) + ' kg</span>' : ''}</b>
+      <div class="sub">${esc(fdn(dnOf(w.d), {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'}))}${w.fat > 0 ? '<br>' + num(w.fat, 1) + ' % de masse grasse · ' + num(fatKg, 1) + ' kg de gras · ' + num(w.kg - fatKg, 1) + ' kg de masse maigre' : ''}</div></div><span class="muted">›</span></div>`;
+  });
+  return h + '</section>';
+}
+function viewRunSet() {
+  const o = S.obj, th = Math.floor(o.target / 60), tm = o.target % 60;
+  let h = `<section class="card"><div class="cat-t">Objectifs</div>
+    <label class="f">Séances par semaine<select class="edit" data-c="objF" data-f="sess">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option ${n === o.sess ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Poids visé (kg)<input class="edit" inputmode="decimal" data-c="objF" data-f="kg" value="${show(o.kg)}"></label></section>`;
+  h += `<section class="card"><div class="cat-t">Course visée</div>
+    <label class="f">Date<input class="edit" type="date" data-c="objF" data-f="race" value="${esc(o.race)}"></label>
+    <div class="two"><label class="f">Temps visé : heures<input class="edit" inputmode="numeric" data-c="objF" data-f="tgtH" value="${th}"></label><label class="f">minutes<input class="edit" inputmode="numeric" data-c="objF" data-f="tgtM" value="${tm}"></label></div></section>`;
+  h += `<section class="card"><div class="cat-t">Zone d’endurance fondamentale</div>
+    <div class="muted">FC moyenne visée en endurance fondamentale. Elle sert de bande sur le graphique de FC et d’alerte quand une séance d’EF la dépasse. Elle reste à toi de la régler selon ce que tu ressens.</div>
+    <div class="two"><label class="f">De (bpm)<input class="edit" inputmode="numeric" data-c="objF" data-f="efLo" value="${o.efLo}"></label><label class="f">À (bpm)<input class="edit" inputmode="numeric" data-c="objF" data-f="efHi" value="${o.efHi}"></label></div></section>`;
+  h += `<section class="card"><div class="cat-t">Sauvegarde et export</div>
+    <div class="muted">Tes séances et pesées sont enregistrées uniquement sur ce téléphone. Sauvegarde-les régulièrement.</div>
+    <div class="row"><button class="btn" data-a="export">Sauvegarder mes données</button><button class="btn ghost" data-a="importBtn">Restaurer…</button></div>
+    <div class="row"><button class="btn ghost small" data-a="csvRuns">Séances (CSV)</button><button class="btn ghost small" data-a="csvWeigh">Pesées (CSV)</button></div></section>`;
+  h += `<section class="card"><div class="cat-t">Effacer</div><div class="muted">Supprime toutes les séances et pesées. Irréversible : sauvegarde d’abord.</div><button class="btn danger" data-a="runWipe">Effacer mes données de course</button></section>`;
+  return h;
+}
+
+// ---------- formulaires
+const lastRunType = () => { const a = runsAsc(); return a.length ? rty(a[a.length - 1]) : 'ef'; };
+function runFormHTML() {
+  const r = M.id ? S.runs.find(x => x.id === M.id) : null, d = M.draft || {};
+  const v = r || {d: d.d || isoOf(todayDn()), type: d.type || lastRunType()};
+  const mn = r ? Math.floor(r.s / 60) : '', sc = r ? r.s % 60 : '';
+  return sheet(r ? 'Modifier la séance' : 'Nouvelle séance', `<div id="rform">
+    <label class="f">Date<input class="edit" type="date" id="rf_d" value="${esc(v.d)}"></label>
+    <label class="f">Type de séance<select class="edit" id="rf_t">${RTYPES.map(t => `<option value="${t.k}" ${t.k === rty(v) ? 'selected' : ''}>${esc(t.n)}</option>`).join('')}</select></label>
+    <label class="f">Distance (km)<input class="edit" id="rf_km" inputmode="decimal" placeholder="ex. 5,2" value="${show(r ? r.km : '')}"></label>
+    <div class="two"><label class="f">Durée : minutes<input class="edit" id="rf_min" inputmode="numeric" placeholder="ex. 38" value="${mn}"></label><label class="f">secondes<input class="edit" id="rf_sec" inputmode="numeric" placeholder="ex. 10" value="${sc}"></label></div>
+    <div class="two"><label class="f">FC moyenne (bpm)<input class="edit" id="rf_bpm" inputmode="numeric" value="${r && r.bpm ? r.bpm : ''}"></label><label class="f">FC max (bpm)<input class="edit" id="rf_bmax" inputmode="numeric" placeholder="facultatif" value="${r && r.bmax ? r.bmax : ''}"></label></div>
+    <label class="f">Calories dépensées (kcal)<input class="edit" id="rf_kcal" inputmode="numeric" placeholder="facultatif" value="${r && r.kcal ? r.kcal : ''}"></label>
+    <label class="f">Effort ressenti, de 1 (très facile) à 10 (maximal)<select class="edit" id="rf_rpe"><option value="">–</option>${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option ${r && r.rpe === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Note (facultatif)<input class="edit" id="rf_note" maxlength="120" placeholder="ex. chaud, jambes lourdes" value="${esc(r ? r.note || '' : '')}"></label>
+    <div class="calc" id="rcalc"></div>
+    <div class="row" style="margin-top:14px"><button class="btn" data-a="runSave" data-keep="0">Enregistrer</button>${r ? '' : '<button class="btn ghost" data-a="runSave" data-keep="1">Enregistrer et ajouter une autre</button>'}</div>
+    ${r ? '<button class="btn danger" data-a="runDel">Supprimer cette séance</button>' : ''}</div>`);
+}
+const gv = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+function readRun() {
+  const d = gv('rf_d'), km = parseNum(gv('rf_km')), mn = parseNum(gv('rf_min')), sc = parseNum(gv('rf_sec')), bpm = parseNum(gv('rf_bpm')), bmax = parseNum(gv('rf_bmax')), kcal = parseNum(gv('rf_kcal'));
+  const s = Math.round((mn || 0) * 60 + (sc || 0)), rpe = parseNum(gv('rf_rpe'));
+  const out = {warn: []};
+  if (dnOf(d) === null) { out.err = 'Choisis une date'; return out; }
+  if (!(km > 0) || km > 100) { out.err = 'Distance invalide (0 à 100 km)'; return out; }
+  if (!(s > 0)) { out.err = 'Indique la durée'; return out; }
+  if (sc !== null && sc > 59) { out.err = 'Les secondes vont de 0 à 59'; return out; }
+  if (bpm !== null && (bpm < 40 || bpm > 230)) { out.err = 'FC moyenne invalide'; return out; }
+  if (bmax !== null && (bmax < 40 || bmax > 240)) { out.err = 'FC max invalide'; return out; }
+  if (bpm !== null && bmax !== null && bmax < bpm) { out.err = 'La FC max doit être au moins égale à la FC moyenne'; return out; }
+  if (kcal !== null && (kcal < 0 || kcal > 10000)) { out.err = 'Calories invalides'; return out; }
+  const type = gv('rf_t'), pace = s / km;
+  if (pace < 180 || pace > 900) out.warn.push('Allure inhabituelle (' + fPace(pace) + ' /km) : vérifie la distance et la durée.');
+  if (type === 'ef' && bpm !== null && bpm > S.obj.efHi) out.warn.push('FC moyenne au-dessus du plafond d’endurance fondamentale (' + S.obj.efHi + ' bpm).');
+  out.pace = pace; out.kpk = kcal ? kcal / km : null;
+  out.rec = {d, type: RT_BY[type] ? type : 'au', km: Math.round(km * 100) / 100, s, bpm: bpm !== null ? Math.round(bpm) : null, bmax: bmax !== null ? Math.round(bmax) : null, kcal: kcal !== null ? Math.round(kcal) : null, rpe: rpe ? Math.round(rpe) : null, note: gv('rf_note').trim()};
+  return out;
+}
+function rformCalc() {
+  const el = document.getElementById('rcalc'); if (!el) return;
+  const x = readRun();
+  if (x.err) { el.innerHTML = '<span class="muted">Renseigne distance et durée pour voir l’allure.</span>'; return; }
+  el.innerHTML = `Allure : <b>${fPace(x.pace)} /km</b>${x.kpk ? ' · ' + num(x.kpk) + ' kcal/km' : ''}${x.warn.map(t => `<div class="warn">⚠ ${esc(t)}</div>`).join('')}`;
+}
+function weighFormHTML() {
+  const w = M.id ? S.weigh.find(x => x.id === M.id) : null, last = weighAsc().pop();
+  return sheet(w ? 'Modifier la pesée' : 'Nouvelle pesée', `<div id="wform">
+    <label class="f">Date<input class="edit" type="date" id="wf_d" value="${esc(w ? w.d : isoOf(todayDn()))}"></label>
+    <label class="f">Poids (kg)<input class="edit" id="wf_kg" inputmode="decimal" placeholder="${last ? 'dernière : ' + show(last.kg) : 'ex. 107,6'}" value="${show(w ? w.kg : '')}"></label>
+    <label class="f">Masse grasse (%)<input class="edit" id="wf_fat" inputmode="decimal" placeholder="facultatif" value="${show(w && w.fat ? w.fat : '')}"></label>
+    <div class="calc" id="wcalc"></div>
+    <div class="row" style="margin-top:14px"><button class="btn" data-a="weighSave">Enregistrer</button></div>
+    ${w ? '<button class="btn danger" data-a="weighDel">Supprimer cette pesée</button>' : ''}</div>`);
+}
+function readWeigh() {
+  const d = gv('wf_d'), kg = parseNum(gv('wf_kg')), fat = parseNum(gv('wf_fat'));
+  if (dnOf(d) === null) return {err: 'Choisis une date'};
+  if (!(kg >= 30 && kg <= 300)) return {err: 'Poids invalide'};
+  if (fat !== null && !(fat >= 2 && fat <= 70)) return {err: '% de masse grasse invalide'};
+  return {rec: {d, kg: Math.round(kg * 10) / 10, fat: fat !== null ? Math.round(fat * 10) / 10 : null}};
+}
+function wformCalc() {
+  const el = document.getElementById('wcalc'); if (!el) return;
+  const x = readWeigh();
+  if (x.err || !x.rec.fat) { el.innerHTML = '<span class="muted">Avec le % de masse grasse, je calcule masse grasse et masse maigre.</span>'; return; }
+  const g = x.rec.kg * x.rec.fat / 100; el.innerHTML = `Masse grasse : <b>${num(g, 1)} kg</b> · masse maigre : <b>${num(x.rec.kg - g, 1)} kg</b>`;
+}
+
+// ---------- actions
+const rid = p => p + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+Object.assign(A, {
+  mode: t => { S.mode = t.dataset.m === 'run' ? 'run' : 'meal'; save(); render(); },
+  rtab: t => { RTAB = t.dataset.t; render(); },
+  rPrev: () => { RW -= 7; render(true); }, rNext: () => { RW += 7; render(true); }, rToday: () => { RW = monOf(todayDn()); render(true); },
+  rweek: t => { RW = +t.dataset.m; render(); },
+  rrange: t => { S.rrange = t.dataset.r; save(); render(true); },
+  rhide: t => { const k = t.dataset.k; if (S.rhide[k]) delete S.rhide[k]; else S.rhide[k] = 1; save(); render(true); },
+  rsel: t => { RSEL = RSEL === t.dataset.id ? null : t.dataset.id; render(true); },
+  rAll: () => { RALL = true; render(true); },
+  runNew: () => openModal({type: 'runf', id: null}),
+  runEdit: t => openModal({type: 'runf', id: t.dataset.id}),
+  runSave: t => {
+    const x = readRun(); if (x.err) return toast(x.err);
+    if (M.id) { const r = S.runs.find(q => q.id === M.id); if (r) Object.assign(r, x.rec); } else S.runs.push(Object.assign({id: rid('r')}, x.rec));
+    save();
+    if (t.dataset.keep === '1') { M = {type: 'runf', id: null, draft: {d: x.rec.d, type: x.rec.type}}; renderModal(); render(true); toast('Séance enregistrée · nouvelle séance'); const sh = modalEl.querySelector('.sheet'); if (sh) sh.scrollTop = 0; rformCalc(); }
+    else { closeModal(); toast('Séance enregistrée'); }
+  },
+  runDel: () => { if (!confirm('Supprimer cette séance ?')) return; S.runs = S.runs.filter(r => r.id !== M.id); if (RSEL === M.id) RSEL = null; save(); closeModal(); toast('Séance supprimée'); },
+  weighNew: () => openModal({type: 'weighf', id: null}),
+  weighEdit: t => openModal({type: 'weighf', id: t.dataset.id}),
+  weighSave: () => {
+    const x = readWeigh(); if (x.err) return toast(x.err);
+    const same = !M.id && S.weigh.find(w => w.d === x.rec.d);
+    if (M.id) Object.assign(S.weigh.find(w => w.id === M.id) || {}, x.rec);
+    else if (same) Object.assign(same, x.rec); else S.weigh.push(Object.assign({id: rid('w')}, x.rec));
+    save(); closeModal(); toast(same ? 'Pesée du jour mise à jour' : 'Pesée enregistrée');
+  },
+  weighDel: () => { if (!confirm('Supprimer cette pesée ?')) return; S.weigh = S.weigh.filter(w => w.id !== M.id); save(); closeModal(); toast('Pesée supprimée'); },
+  runWipe: () => { if (!confirm('Effacer toutes tes séances et pesées ?')) return; if (!confirm('Vraiment ? C’est irréversible.')) return; S.runs = []; S.weigh = []; RSEL = null; save(); render(true); toast('Données de course effacées'); },
+  csvRuns: () => {
+    const c = v => v === null || v === undefined ? '' : String(v).replace('.', ',');
+    const rows = [['Date', 'Type', 'Distance (km)', 'Durée (s)', 'Allure (s/km)', 'FC moyenne', 'FC max', 'Calories', 'Effort (1-10)', 'Note']].concat(runsAsc().map(r => [r.d, (RT_BY[rty(r)]).n, c(r.km), r.s, c(Math.round(r.s / r.km)), c(r.bpm), c(r.bmax), c(r.kcal), c(r.rpe), '"' + String(r.note || '').replace(/"/g, '""') + '"']));
+    dlCsv(rows, 'seances');
+  },
+  csvWeigh: () => {
+    const c = v => v === null || v === undefined ? '' : String(v).replace('.', ',');
+    dlCsv([['Date', 'Poids (kg)', 'Masse grasse (%)', 'Masse grasse (kg)', 'Masse maigre (kg)']].concat(weighAsc().map(w => [w.d, c(w.kg), c(w.fat), w.fat ? c(Math.round(w.kg * w.fat) / 100) : '', w.fat ? c(Math.round((w.kg - w.kg * w.fat / 100) * 10) / 10) : ''])), 'pesees');
+  }
+});
+function dlCsv(rows, name) {
+  const b = new Blob(['﻿' + rows.map(r => r.join(';')).join('\r\n')], {type: 'text/csv;charset=utf-8'}), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Fichier téléchargé');
+}
+C.objF = t => {
+  const o = S.obj, f = t.dataset.f, v = parseNum(t.value);
+  if (f === 'sess') o.sess = Math.max(1, Math.min(7, Math.round(v || 3)));
+  else if (f === 'kg') { if (v >= 30 && v <= 300) o.kg = Math.round(v * 10) / 10; }
+  else if (f === 'race') { if (dnOf(t.value) !== null) o.race = t.value; }
+  else if (f === 'tgtH' || f === 'tgtM') {
+    let h = Math.floor(o.target / 60), m = o.target % 60;
+    if (f === 'tgtH') h = Math.max(0, Math.min(9, Math.round(v || 0))); else m = Math.max(0, Math.min(59, Math.round(v || 0)));
+    if (h * 60 + m >= 90) o.target = h * 60 + m; else toast('Temps visé trop court');
+  }
+  else if (f === 'efLo' || f === 'efHi') {
+    if (v >= 60 && v <= 220) o[f] = Math.round(v);
+    if (o.efLo >= o.efHi) { if (f === 'efLo') o.efHi = o.efLo + 5; else o.efLo = o.efHi - 5; toast('Zone corrigée : bas < haut'); }
+  }
+  save(); render(true);
+};
+document.addEventListener('input', e => { const id = e.target.id || ''; if (id.startsWith('rf_')) rformCalc(); else if (id.startsWith('wf_')) wformCalc(); });
+document.addEventListener('change', e => { const id = e.target.id || ''; if (id.startsWith('rf_')) rformCalc(); else if (id.startsWith('wf_')) wformCalc(); });
+
 render();
+if (!S.rseen) { S.rseen = 1; save(); setTimeout(() => toast('Nouveau : touche « Course » en haut pour le suivi'), 1200); }
 if (MIGR) setTimeout(() => toast('Mise à jour : ' + MIGR), 600);
 </script>
 </body>
