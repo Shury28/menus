@@ -1311,7 +1311,7 @@ function viewRunDash() {
   { const sim = progSim(), nx = sim.err ? null : nextSession(sim);
     if (nx) { const info = slotInfo(nx.s, nx.w);
       h += `<section class="card"><div class="cat-t">Prochaine séance</div><div style="display:flex;gap:10px;align-items:center">${tyGlyph(info.type, 24)}<div style="flex:1;min-width:0"><b>${esc(info.title)}</b><div class="muted">${esc(fdn(nx.d, {weekday: 'long', day: 'numeric', month: 'long'}))}${nx.s.kind === 'race' ? '' : ' · ' + nx.s.min + ' min · ≈ ' + num(slotKm(nx.s), 1) + ' km'}</div></div></div>
-      <div class="row">${nx.s.kind === 'race' ? '' : `<button class="btn small" data-a="planRun" data-m="${nx.w.mon}" data-k="${nx.s.k}">Saisir cette séance</button>`}<button class="btn ghost small" data-a="goPlan">Voir le plan</button></div></section>`; } }
+      <div class="row">${nx.s.kind === 'race' ? '' : `<button class="btn small" data-a="planRun" data-m="${nx.w.mon}" data-k="${nx.s.k}">Saisir cette séance</button>`}<button class="btn ghost small" data-a="goPlan">Voir le plan</button></div><div class="row" style="margin-top:6px"><button class="btn ghost small" data-a="fitExport" data-m="${nx.w.mon}" data-k="${nx.s.k}">Exporter pour la montre (.fit)</button></div></section>`; } }
   h += `<div class="weeknav"><button class="n" data-a="rPrev" aria-label="Semaine précédente">‹</button><div class="t"><b>Semaine ${w}</b><span class="muted">${fdn(RW, {day: 'numeric', month: 'short'})} – ${fdn(RW + 6, {day: 'numeric', month: 'short', year: 'numeric'})}</span>${RW === thisM ? '' : '<br><button class="btn ghost small" data-a="rToday" style="margin-top:6px">Cette semaine</button>'}</div><button class="n" data-a="rNext" aria-label="Semaine suivante">›</button></div>`;
   const dots = Array.from({length: Math.max(o.sess, a.n)}, (_, i) => `<span class="dot ${i < a.n ? 'on' : ''}"></span>`).join('');
   h += `<section class="card"><div class="cat-t">Séances de la semaine</div>
@@ -1720,36 +1720,40 @@ const slotKm = s => s.kind === 'race' ? 42.195 : kmOfMin(s.min);
 // ---------- blocs à recopier dans Garmin Connect
 const pr2 = (a, b) => fPace(a) + '–' + fPace(b) + ' /km';
 function slotBlocks(s) {
-  const o = S.obj, hr = `FC ${o.efLo}–${o.efHi} bpm`, none = 'Aucune cible', ef = efPaceNow();
-  const st = (n, dur, tgt) => ({n, dur, tgt: tgt || none});
+  const o = S.obj, hrR = [o.efLo, o.efHi], hr = `FC ${o.efLo}–${o.efHi} bpm`, none = 'Aucune cible', ef = efPaceNow();
+  const st = (n, dur, tgt, x) => Object.assign({n, dur, tgt: tgt || none}, x || {});
   const rep = (k, steps) => ({rep: k, steps});
-  const tgtM = workPace(), am = pr2(tgtM - 5, tgtM + 5), mn = x => x + ' min';
-  const easy = m => st('Course', mn(m), hr);
+  const tgtM = workPace(), spM = [tgtM + 5, tgtM - 5], am = pr2(tgtM - 5, tgtM + 5), mn = x => x + ' min';
+  const easy = m => st('Course', mn(m), hr, {hr: hrR, it: 0, fn: 'Course'});
+  const warm = m => st('Échauffement', mn(m), null, {it: 2, fn: 'Echauffement'});
+  const cool = m => st('Retour au calme', mn(m), null, {it: 3, fn: 'Retour calme'});
+  const rec = (d, tg) => st('Récupération', d, tg, {it: 4, fn: 'Recup'});
+  const acc = st('Course', '20 s', 'Accélération progressive', {it: 5, fn: 'Acceleration'});
   if (s.kind === 'ef' || s.kind === 'long') {
     if (s.rw) {
-      const n = Math.floor(s.min / 9), rest = s.min - 9 * n, b = [rep(n, [st('Course', '8 min', hr), st('Récupération (marche)', '1 min')])];
-      if (rest > 0) b.push(st('Retour au calme (marche)', mn(rest)));
+      const n = Math.floor(s.min / 9), rest = s.min - 9 * n, b = [rep(n, [st('Course', '8 min', hr, {hr: hrR, it: 0, fn: 'Course'}), st('Récupération (marche)', '1 min', null, {it: 4, fn: 'Marche'})])];
+      if (rest > 0) b.push(st('Retour au calme (marche)', mn(rest), null, {it: 3, fn: 'Retour calme'}));
       return b;
     }
     return [easy(s.min)];
   }
   if (s.kind === 'fart') {
-    const fast = pr2(ef * .90, ef * .94), cool = Math.max(5, s.min - 10 - s.reps * 3);
-    return [st('Échauffement', '10 min'), rep(s.reps, [st('Course', '1 min', 'Allure ≈ ' + fast + ' (effort 7/10, ajuste au ressenti)'), st('Récupération', '2 min', 'Aucune cible, très facile')])].concat(cool > 10 ? [st('Course facile', mn(cool - 5), hr), st('Retour au calme', '5 min')] : [st('Retour au calme', mn(cool))]);
+    const fast = pr2(ef * .90, ef * .94), c = Math.max(5, s.min - 10 - s.reps * 3);
+    return [warm(10), rep(s.reps, [st('Course', '1 min', 'Allure ≈ ' + fast + ' (effort 7/10, ajuste au ressenti)', {sp: [ef * .94, ef * .90], it: 5, fn: 'Rapide'}), rec('2 min', 'Aucune cible, très facile')])]
+      .concat(c > 10 ? [st('Course facile', mn(c - 5), hr, {hr: hrR, it: 0, fn: 'Course facile'}), cool(5)] : [cool(c)]);
   }
   if (s.kind === 'am') {
-    const two = s.bmin >= 40, bm = two ? Math.round(s.bmin / 2) : s.bmin;
-    const mid = two ? [st('Course', mn(bm), 'Allure ' + am), st('Récupération', '3 min', 'Aucune cible, footing facile'), st('Course', mn(bm), 'Allure ' + am)] : [st('Course', mn(bm), 'Allure ' + am)];
-    return [st('Échauffement', '15 min'), ...mid, st('Retour au calme', '10 min')];
+    const two = s.bmin >= 40, bm = two ? Math.round(s.bmin / 2) : s.bmin, blk = () => st('Course', mn(bm), 'Allure ' + am, {sp: spM, it: 5, fn: 'Allure marathon'});
+    return [warm(15), ...(two ? [blk(), rec('3 min', 'Aucune cible, footing facile'), blk()] : [blk()]), cool(10)];
   }
-  if (s.kind === 'longam') return [st('Course', mn(s.min - s.fin), hr), st('Course', mn(s.fin), 'Allure ' + am)];
+  if (s.kind === 'longam') return [easy(s.min - s.fin), st('Course', mn(s.fin), 'Allure ' + am, {sp: spM, it: 5, fn: 'Allure marathon'})];
   if (s.kind === 'test') {
     const tt = eqTime(s.km) * [1.2, 1.1, 1.03][s.ti], pc = tt / s.km;
-    return [st('Échauffement', '15 min'), rep(4, [st('Course', '20 s', 'Accélération progressive'), st('Récupération', '40 s')]), st('Course', s.km + ' km', 'Allure repère ≤ ' + fPace(pc) + ' /km, effort soutenu mais régulier'), st('Retour au calme', '10 min')];
+    return [warm(15), rep(4, [acc, rec('40 s')]), st('Course', s.km + ' km', 'Allure repère ≤ ' + fPace(pc) + ' /km, effort soutenu mais régulier', {sp: [pc + 10, pc - 10], it: 5, fn: 'Test ' + s.km + ' km'}), cool(10)];
   }
-  if (s.kind === 'accel') return [easy(12), rep(4, [st('Course', '20 s', 'Accélération progressive'), st('Récupération', '1 min')]), st('Retour au calme', '3 min')];
+  if (s.kind === 'accel') return [easy(12), rep(4, [acc, rec('1 min')]), cool(3)];
   const tg = o.target * 60 / 42.195;
-  return [st('Course', '42,195 km', 'Allure visée ' + fPace(tg) + ' /km, départ prudent')];
+  return [st('Course', '42,195 km', 'Allure visée ' + fPace(tg) + ' /km, départ prudent', {sp: [tg + 8, tg - 4], it: 0, fn: 'Marathon'})];
 }
 function blocksText(name, bl) {
   let n = 0; const L = [name];
@@ -1763,7 +1767,7 @@ function blocksHTML(s, w, info) {
   const body = bl.map(b => b.rep ? `<div class="bk rp">Répéter ${b.rep} fois</div>${b.steps.map(x => row(x, 1)).join('')}` : row(b, 0)).join('');
   return `<details class="blk" data-id="${esc(id)}" ${OPEN.has(id) ? 'open' : ''}><summary>Blocs pour la montre</summary>
     <div class="hint" style="margin-top:0">À recopier dans l’éditeur de séances de Garmin Connect (Entraînement et planification, Séances).</div>${body}
-    <button class="btn ghost small" style="margin-top:10px" data-a="copyBlocks" data-m="${w.mon}" data-k="${s.k}">Copier en texte</button></details>`;
+    <div class="row" style="margin-top:10px"><button class="btn small" data-a="fitExport" data-m="${w.mon}" data-k="${s.k}">Exporter pour la montre (.fit)</button><button class="btn ghost small" data-a="copyBlocks" data-m="${w.mon}" data-k="${s.k}">Copier en texte</button></div></details>`;
 }
 
 // ---------- vue Plan
@@ -1870,7 +1874,14 @@ function viewRunPlan() {
     <div class="kv"><span>Marathon de Tours</span><b>${esc(fdn(sim.rd, {day: 'numeric', month: 'short', year: 'numeric'}))}</b></div>
     <div class="hint">Les repères sont calculés à partir de ton temps visé (${fTot(o.target * 60)}). Si deux tests de suite sont nettement au-dessus, l’objectif de temps est à rediscuter : c’est ta décision, l’appli te donne juste les chiffres.</div></section>`;
   h += progSettingsHTML();
-  h += `<details class="card"><summary style="min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue)">Comment le programme s’adapte</summary>
+  h += `<details class="card"><summary style="min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue)">Mettre une séance sur ma montre</summary>
+    <div class="hint" style="margin-top:8px">1. Ouvre la séance, déplie « Blocs pour la montre » et touche « Exporter pour la montre (.fit) » : le fichier, par exemple « S1 Seance 1.fit », est téléchargé.<br>
+    2. Branche ta Forerunner à un ordinateur avec son câble USB (sur Mac, installe l’application gratuite OpenMTP).<br>
+    3. Copie le fichier dans le dossier GARMIN, puis NewFiles de la montre.<br>
+    4. Éjecte la montre proprement, puis débranche-la.<br>
+    5. Sur la montre : Entraînement, puis Séances. Si la séance n’apparaît pas, redémarre la montre.<br>
+    Charge une séance à la fois. Si la montre en garde trop, supprime les anciennes. Les cibles de FC et d’allure sont celles affichées dans les blocs : recalcule-les et exporte à nouveau si ton plan évolue.</div></details>
+  <details class="card"><summary style="min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue)">Comment le programme s’adapte</summary>
     <div class="hint" style="margin-top:8px">Chaque lundi, l’appli regarde la semaine terminée :<br>
     • 3 séances faites, sortie longue tenue, ressenti correct : la sortie longue augmente (au plus +6 % par semaine, et pas plus de 3,5 min tant que la sortie est courte) pour suivre la trajectoire vers 3 h.<br>
     • 2 séances sur 3, sortie longue écourtée (moins de 80 %) ou effort ressenti trop élevé : on maintient le niveau.<br>
@@ -1911,6 +1922,71 @@ C.progF = t => {
   save(); render(true);
 };
 const RVIEWS = {dash: viewRunDash, plan: viewRunPlan, sess: viewRunSess, weigh: viewRunWeigh, rset: viewRunSet};
+
+// ============================================================ EXPORT .FIT (séance structurée Garmin)
+const FIT_T = [0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401, 0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400];
+function fitCrc(bytes, crc) {
+  crc = crc || 0;
+  for (const b of bytes) {
+    let t = FIT_T[crc & 0xF]; crc = (crc >> 4) & 0x0FFF; crc = crc ^ t ^ FIT_T[b & 0xF];
+    t = FIT_T[crc & 0xF]; crc = (crc >> 4) & 0x0FFF; crc = crc ^ t ^ FIT_T[(b >> 4) & 0xF];
+  }
+  return crc;
+}
+const asciiFit = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7e]/g, '');
+function fitStepsFlat(blocks) {
+  const out = [], INV8 = 0xFF, INV32 = 0xFFFFFFFF;
+  const conv = x => {
+    let dt = 5, dv = INV32, m;
+    if ((m = /^(\d+) min$/.exec(x.dur))) { dt = 0; dv = +m[1] * 60000; }
+    else if ((m = /^(\d+) s$/.exec(x.dur))) { dt = 0; dv = +m[1] * 1000; }
+    else if ((m = /^([\d,]+) km$/.exec(x.dur))) { dt = 1; dv = Math.round(parseFloat(m[1].replace(',', '.')) * 100000); }
+    let tt = 2, tv = INV32, lo = INV32, hi = INV32;
+    if (x.hr) { tt = 1; tv = 0; lo = x.hr[0] + 100; hi = x.hr[1] + 100; }
+    else if (x.sp) { tt = 0; tv = 0; lo = Math.round(1e6 / x.sp[0]); hi = Math.round(1e6 / x.sp[1]); }
+    return {name: asciiFit(x.fn || x.n).slice(0, 15), dt, dv, tt, tv, lo, hi, it: x.it == null ? 0 : x.it};
+  };
+  for (const b of blocks) {
+    if (b.rep) { const start = out.length; b.steps.forEach(x => out.push(conv(x))); out.push({name: '', dt: 6, dv: start, tt: INV8, tv: b.rep, lo: INV32, hi: INV32, it: INV8}); }
+    else out.push(conv(b));
+  }
+  return out;
+}
+function fitWorkout(name, blocks) {
+  const steps = fitStepsFlat(blocks), d = [];
+  const u8 = v => d.push(v & 0xFF), u16 = v => { d.push(v & 0xFF, (v >> 8) & 0xFF); };
+  const u32 = v => { v = v >>> 0; d.push(v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF); };
+  const str = (s, n) => { for (let i = 0; i < n; i++) d.push(i < s.length && i < n - 1 ? s.charCodeAt(i) : 0); };
+  const def = (loc, num, fields) => { u8(0x40 | loc); u8(0); u8(0); u16(num); u8(fields.length); for (const f of fields) { u8(f[0]); u8(f[1]); u8(f[2]); } };
+  // file_id
+  def(0, 0, [[0, 1, 0x00], [1, 2, 0x84], [2, 2, 0x84], [3, 4, 0x8C], [4, 4, 0x86]]);
+  u8(0); u8(5); u16(255); u16(0); u32(20261022); u32(Math.floor(Date.now() / 1000) - 631065600);
+  // workout
+  def(1, 26, [[4, 1, 0x00], [6, 2, 0x84], [8, 24, 0x07]]);
+  u8(1); u8(1); u16(steps.length); str(asciiFit(name), 24);
+  // workout_step
+  def(2, 27, [[254, 2, 0x84], [0, 16, 0x07], [1, 1, 0x00], [2, 4, 0x86], [3, 1, 0x00], [4, 4, 0x86], [5, 4, 0x86], [6, 4, 0x86], [7, 1, 0x00]]);
+  steps.forEach((s, i) => { u8(2); u16(i); str(s.name, 16); u8(s.dt); u32(s.dv); u8(s.tt); u32(s.tv); u32(s.lo); u32(s.hi); u8(s.it); });
+  const n = d.length, head = [14, 0x20, 2132 & 0xFF, 2132 >> 8, n & 0xFF, (n >>> 8) & 0xFF, (n >>> 16) & 0xFF, (n >>> 24) & 0xFF, 0x2E, 0x46, 0x49, 0x54];
+  const hc = fitCrc(head); head.push(hc & 0xFF, hc >> 8);
+  const all = head.concat(d), c = fitCrc(all); all.push(c & 0xFF, c >> 8);
+  return new Uint8Array(all);
+}
+function slotFitName(w, s, sim) {
+  if (s.kind === 'race') return 'S' + w.i + ' Marathon';
+  const ss = weekSlots(w, sim).filter(x => x.kind !== 'race').sort((a, b) => slotDate(w, a, sim) - slotDate(w, b, sim));
+  return 'S' + w.i + ' Seance ' + (ss.indexOf(s) + 1);
+}
+Object.assign(A, {
+  fitExport: t => {
+    const sim = progSim(); if (sim.err) return;
+    const w = sim.weeks.find(x => x.mon === +t.dataset.m), s = w && w.slots.find(x => x.k === +t.dataset.k); if (!s) return;
+    const name = slotFitName(w, s, sim), bytes = fitWorkout(name, slotBlocks(s));
+    const b = new Blob([bytes], {type: 'application/octet-stream'}), a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = name + '.fit'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('« ' + name + '.fit » téléchargé : copie-le dans GARMIN > NewFiles');
+  }
+});
 
 render();
 if (!S.rseen) { S.rseen = 1; save(); setTimeout(() => toast('Nouveau : touche « Course » en haut pour le suivi'), 1200); }
