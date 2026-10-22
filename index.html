@@ -170,6 +170,17 @@ body.run header#top{background:#0F6C8C}
 .tbl.r th:first-child{width:36%}
 input[type=date].edit{appearance:none;-webkit-appearance:none;min-width:0}
 
+.bar{height:10px;background:#E3E9EF;border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--blue)}
+.slot{border-top:1px solid var(--line);padding:14px 0 6px}
+.slot:first-of-type{border-top:0;padding-top:4px}
+.slot .sh{display:flex;gap:10px;align-items:center}
+.bdg{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:4px 12px;border:1px solid var(--line);background:var(--bg);color:var(--muted)}
+.bdg.done{background:var(--blue3);color:var(--blue);border-color:var(--blue3)}
+.bdg.miss{background:#fff;color:var(--warn);border-color:var(--warn)}
+.bdg.now{background:var(--blue);color:#fff;border-color:var(--blue)}
+.slot .two{align-items:end}
+
 </style>
 </head>
 <body>
@@ -209,6 +220,7 @@ function ensureRun() {
   if (!(o.sess >= 1)) o.sess = 3; if (!(o.kg > 0)) o.kg = 79; if (!(o.efLo > 0)) o.efLo = 140; if (!(o.efHi > 0)) o.efHi = 155;
   if (!o.race) o.race = '2027-09-26'; if (!(o.target > 0)) o.target = 240;
   S.rhide = S.rhide || {}; S.rrange = S.rrange || '12';
+  const pg = S.prog = S.prog || {}; if (!pg.start) pg.start = '2026-10-26'; if (!Array.isArray(pg.d) || pg.d.length !== 3) pg.d = [1, 3, 5]; pg.mv = pg.mv || {};
 }
 ensureRun();
 let MIGR = '';
@@ -802,7 +814,7 @@ function render(keep) {
   document.getElementById('ttl').textContent = run ? RTITLES[RTAB] : TITLES[TAB];
   document.getElementById('sw').innerHTML = [['meal', '🍽️', 'Repas'], ['run', '🏃', 'Course']].map(([k, i, tt]) => `<button class="${S.mode === k ? 'on' : ''}" data-a="mode" data-m="${k}" aria-label="Mode ${tt}">${i} ${tt}</button>`).join('');
   document.getElementById('tabs').innerHTML = (run ? RTABS : TABS).map(([k, ic, tt]) => `<button class="${(run ? RTAB : TAB) === k ? 'on' : ''}" data-a="${run ? 'rtab' : 'tab'}" data-t="${k}"><i>${ic}</i>${tt}</button>`).join('');
-  document.getElementById('view').innerHTML = run ? ({dash: viewRunDash, sess: viewRunSess, weigh: viewRunWeigh, rset: viewRunSet})[RTAB]() : ({week: viewWeek, steps: viewSteps, cmp: viewCmp, rec: viewRec, cat: viewCat, set: viewSet})[TAB]();
+  document.getElementById('view').innerHTML = run ? RVIEWS[RTAB]() : ({week: viewWeek, steps: viewSteps, cmp: viewCmp, rec: viewRec, cat: viewCat, set: viewSet})[TAB]();
   window.scrollTo(0, keep ? y : 0);
 }
 
@@ -1071,8 +1083,8 @@ const RTYPES = [
 ];
 const RT_BY = Object.fromEntries(RTYPES.map(t => [t.k, t]));
 const rty = r => RT_BY[r.type] ? r.type : 'au';
-const RTABS = [['dash', '📈', 'Suivi'], ['sess', '🏃', 'Séances'], ['weigh', '⚖️', 'Pesées'], ['rset', '⚙️', 'Réglages']];
-const RTITLES = {dash: 'Suivi', sess: 'Séances', weigh: 'Pesées', rset: 'Réglages'};
+const RTABS = [['dash', '📈', 'Suivi'], ['plan', '🗓️', 'Plan'], ['sess', '🏃', 'Séances'], ['weigh', '⚖️', 'Pesées'], ['rset', '⚙️', 'Réglages']];
+const RTITLES = {dash: 'Suivi', plan: 'Plan', sess: 'Séances', weigh: 'Pesées', rset: 'Réglages'};
 let RTAB = 'dash', RSEL = null, RALL = false, RW = null;
 
 // ---------- dates
@@ -1283,7 +1295,12 @@ const rangeHTML = () => `<div class="seg">${[['4', '4 sem.'], ['12', '12 sem.'],
 function viewRunDash() {
   const T = todayDn(), thisM = monOf(T); if (RW === null) RW = thisM;
   const o = S.obj, a = weekAgg(RW), {w} = isoWeek(new Date(RW * 86400000));
-  let h = `<div class="weeknav"><button class="n" data-a="rPrev" aria-label="Semaine précédente">‹</button><div class="t"><b>Semaine ${w}</b><span class="muted">${fdn(RW, {day: 'numeric', month: 'short'})} – ${fdn(RW + 6, {day: 'numeric', month: 'short', year: 'numeric'})}</span>${RW === thisM ? '' : '<br><button class="btn ghost small" data-a="rToday" style="margin-top:6px">Cette semaine</button>'}</div><button class="n" data-a="rNext" aria-label="Semaine suivante">›</button></div>`;
+  let h = '';
+  { const sim = progSim(), nx = sim.err ? null : nextSession(sim);
+    if (nx) { const info = slotInfo(nx.s, nx.w);
+      h += `<section class="card"><div class="cat-t">Prochaine séance</div><div style="display:flex;gap:10px;align-items:center">${tyGlyph(info.type, 24)}<div style="flex:1;min-width:0"><b>${esc(info.title)}</b><div class="muted">${esc(fdn(nx.d, {weekday: 'long', day: 'numeric', month: 'long'}))}${nx.s.kind === 'race' ? '' : ' · ' + nx.s.min + ' min · ≈ ' + num(slotKm(nx.s), 1) + ' km'}</div></div></div>
+      <div class="row">${nx.s.kind === 'race' ? '' : `<button class="btn small" data-a="planRun" data-m="${nx.w.mon}" data-k="${nx.s.k}">Saisir cette séance</button>`}<button class="btn ghost small" data-a="goPlan">Voir le plan</button></div></section>`; } }
+  h += `<div class="weeknav"><button class="n" data-a="rPrev" aria-label="Semaine précédente">‹</button><div class="t"><b>Semaine ${w}</b><span class="muted">${fdn(RW, {day: 'numeric', month: 'short'})} – ${fdn(RW + 6, {day: 'numeric', month: 'short', year: 'numeric'})}</span>${RW === thisM ? '' : '<br><button class="btn ghost small" data-a="rToday" style="margin-top:6px">Cette semaine</button>'}</div><button class="n" data-a="rNext" aria-label="Semaine suivante">›</button></div>`;
   const dots = Array.from({length: Math.max(o.sess, a.n)}, (_, i) => `<span class="dot ${i < a.n ? 'on' : ''}"></span>`).join('');
   h += `<section class="card"><div class="cat-t">Séances de la semaine</div>
     <div class="dots">${dots}<span class="muted" style="margin-left:4px">${a.n} / ${o.sess}${a.n >= o.sess ? ' · objectif atteint' : ''}</span></div>
@@ -1363,7 +1380,7 @@ function viewRunSess() {
     for (const r of g.rs) {
       const t = RT_BY[rty(r)], over = rty(r) === 'ef' && r.bpm > S.obj.efHi;
       h += `<div class="item" data-a="runEdit" data-id="${esc(r.id)}">${tyGlyph(rty(r), 22)}<div class="nm"><b>${num(r.km, 2)} km · ${fDur(r.s)} <span class="muted">· ${fPace(r.s / r.km)} /km</span></b>
-        <div class="sub">${esc(fdn(dnOf(r.d), {weekday: 'short', day: 'numeric', month: 'short'}))} · ${esc(t.n)}<br>${r.bpm ? r.bpm + ' bpm' + (r.bmax ? ' (max ' + r.bmax + ')' : '') : 'FC non renseignée'}${r.kcal ? ' · ' + num(r.kcal) + ' kcal' : ''}${r.rpe ? ' · effort ' + r.rpe + '/10' : ''}${r.note ? '<br>' + esc(r.note) : ''}</div>${over ? `<div class="warn">FC moyenne au-dessus du plafond EF (${S.obj.efHi})</div>` : ''}</div><span class="muted">›</span></div>`;
+        <div class="sub">${esc(fdn(dnOf(r.d), {weekday: 'short', day: 'numeric', month: 'short'}))} · ${esc(t.n)}<br>${r.bpm ? r.bpm + ' bpm' + (r.bmax ? ' (max ' + r.bmax + ')' : '') : 'FC non renseignée'}${r.kcal ? ' · ' + num(r.kcal) + ' kcal' : ''}${r.rpe ? ' · effort ' + r.rpe + '/10' : ''}${r.pain ? ' · gêne ' + (r.pain === 2 ? 'marquée' : 'légère') : ''}${r.note ? '<br>' + esc(r.note) : ''}</div>${over ? `<div class="warn">FC moyenne au-dessus du plafond EF (${S.obj.efHi})</div>` : ''}</div><span class="muted">›</span></div>`;
     }
     h += '</section>';
   }
@@ -1409,7 +1426,7 @@ function runFormHTML() {
   const r = M.id ? S.runs.find(x => x.id === M.id) : null, d = M.draft || {};
   const v = r || {d: d.d || isoOf(todayDn()), type: d.type || lastRunType()};
   const mn = r ? Math.floor(r.s / 60) : '', sc = r ? r.s % 60 : '';
-  return sheet(r ? 'Modifier la séance' : 'Nouvelle séance', `<div id="rform">
+  return sheet(r ? 'Modifier la séance' : 'Nouvelle séance', `<div id="rform">${d.hint ? `<div class="hint" style="margin-top:8px"><b>${esc(d.hint)}</b></div>` : ''}
     <label class="f">Date<input class="edit" type="date" id="rf_d" value="${esc(v.d)}"></label>
     <label class="f">Type de séance<select class="edit" id="rf_t">${RTYPES.map(t => `<option value="${t.k}" ${t.k === rty(v) ? 'selected' : ''}>${esc(t.n)}</option>`).join('')}</select></label>
     <label class="f">Distance (km)<input class="edit" id="rf_km" inputmode="decimal" placeholder="ex. 5,2" value="${show(r ? r.km : '')}"></label>
@@ -1417,6 +1434,7 @@ function runFormHTML() {
     <div class="two"><label class="f">FC moyenne (bpm)<input class="edit" id="rf_bpm" inputmode="numeric" value="${r && r.bpm ? r.bpm : ''}"></label><label class="f">FC max (bpm)<input class="edit" id="rf_bmax" inputmode="numeric" placeholder="facultatif" value="${r && r.bmax ? r.bmax : ''}"></label></div>
     <label class="f">Calories dépensées (kcal)<input class="edit" id="rf_kcal" inputmode="numeric" placeholder="facultatif" value="${r && r.kcal ? r.kcal : ''}"></label>
     <label class="f">Effort ressenti, de 1 (très facile) à 10 (maximal)<select class="edit" id="rf_rpe"><option value="">–</option>${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<option ${r && r.rpe === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Gêne ou douleur pendant la séance<select class="edit" id="rf_pain">${[[0, 'Aucune'], [1, 'Légère (tension, à surveiller)'], [2, 'Marquée (douleur, arrêt)']].map(([k, l]) => `<option value="${k}" ${r && (r.pain || 0) === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="f">Note (facultatif)<input class="edit" id="rf_note" maxlength="120" placeholder="ex. chaud, jambes lourdes" value="${esc(r ? r.note || '' : '')}"></label>
     <div class="calc" id="rcalc"></div>
     <div class="row" style="margin-top:14px"><button class="btn" data-a="runSave" data-keep="0">Enregistrer</button>${r ? '' : '<button class="btn ghost" data-a="runSave" data-keep="1">Enregistrer et ajouter une autre</button>'}</div>
@@ -1439,7 +1457,7 @@ function readRun() {
   if (pace < 180 || pace > 900) out.warn.push('Allure inhabituelle (' + fPace(pace) + ' /km) : vérifie la distance et la durée.');
   if (type === 'ef' && bpm !== null && bpm > S.obj.efHi) out.warn.push('FC moyenne au-dessus du plafond d’endurance fondamentale (' + S.obj.efHi + ' bpm).');
   out.pace = pace; out.kpk = kcal ? kcal / km : null;
-  out.rec = {d, type: RT_BY[type] ? type : 'au', km: Math.round(km * 100) / 100, s, bpm: bpm !== null ? Math.round(bpm) : null, bmax: bmax !== null ? Math.round(bmax) : null, kcal: kcal !== null ? Math.round(kcal) : null, rpe: rpe ? Math.round(rpe) : null, note: gv('rf_note').trim()};
+  out.rec = {d, type: RT_BY[type] ? type : 'au', km: Math.round(km * 100) / 100, s, bpm: bpm !== null ? Math.round(bpm) : null, bmax: bmax !== null ? Math.round(bmax) : null, kcal: kcal !== null ? Math.round(kcal) : null, rpe: rpe ? Math.round(rpe) : null, pain: Math.round(parseNum(gv('rf_pain')) || 0), note: gv('rf_note').trim()};
   return out;
 }
 function rformCalc() {
@@ -1450,26 +1468,33 @@ function rformCalc() {
 }
 function weighFormHTML() {
   const w = M.id ? S.weigh.find(x => x.id === M.id) : null, last = weighAsc().pop();
+  if (!M.fm) M.fm = S.wfm === 'kg' ? 'kg' : 'pct';
+  const fv = w && w.fat > 0 ? (M.fm === 'kg' ? Math.round(w.kg * w.fat) / 100 : w.fat) : '';
   return sheet(w ? 'Modifier la pesée' : 'Nouvelle pesée', `<div id="wform">
     <label class="f">Date<input class="edit" type="date" id="wf_d" value="${esc(w ? w.d : isoOf(todayDn()))}"></label>
     <label class="f">Poids (kg)<input class="edit" id="wf_kg" inputmode="decimal" placeholder="${last ? 'dernière : ' + show(last.kg) : 'ex. 107,6'}" value="${show(w ? w.kg : '')}"></label>
-    <label class="f">Masse grasse (%)<input class="edit" id="wf_fat" inputmode="decimal" placeholder="facultatif" value="${show(w && w.fat ? w.fat : '')}"></label>
+    <div class="seg" style="margin-top:14px"><button type="button" data-a="wfMode" data-m="pct" class="${M.fm === 'pct' ? 'on' : ''}">Masse grasse en %</button><button type="button" data-a="wfMode" data-m="kg" class="${M.fm === 'kg' ? 'on' : ''}">Masse grasse en kg</button></div>
+    <label class="f"><span id="wf_lab">${M.fm === 'kg' ? 'Masse grasse (kg)' : 'Masse grasse (%)'}</span><input class="edit" id="wf_fat" inputmode="decimal" placeholder="facultatif" value="${show(fv)}"></label>
     <div class="calc" id="wcalc"></div>
     <div class="row" style="margin-top:14px"><button class="btn" data-a="weighSave">Enregistrer</button></div>
     ${w ? '<button class="btn danger" data-a="weighDel">Supprimer cette pesée</button>' : ''}</div>`);
 }
 function readWeigh() {
-  const d = gv('wf_d'), kg = parseNum(gv('wf_kg')), fat = parseNum(gv('wf_fat'));
+  const d = gv('wf_d'), kg = parseNum(gv('wf_kg')); let fat = parseNum(gv('wf_fat'));
   if (dnOf(d) === null) return {err: 'Choisis une date'};
   if (!(kg >= 30 && kg <= 300)) return {err: 'Poids invalide'};
-  if (fat !== null && !(fat >= 2 && fat <= 70)) return {err: '% de masse grasse invalide'};
-  return {rec: {d, kg: Math.round(kg * 10) / 10, fat: fat !== null ? Math.round(fat * 10) / 10 : null}};
+  if (fat !== null && M.fm === 'kg') {
+    if (!(fat > 0 && fat < kg)) return {err: 'Masse grasse invalide (kg)'};
+    fat = fat / kg * 100;
+  }
+  if (fat !== null && !(fat >= 2 && fat <= 70)) return {err: 'Masse grasse invalide : ' + num(fat, 1) + ' % du poids'};
+  return {rec: {d, kg: Math.round(kg * 10) / 10, fat: fat !== null ? Math.round(fat * 100) / 100 : null}};
 }
 function wformCalc() {
   const el = document.getElementById('wcalc'); if (!el) return;
   const x = readWeigh();
-  if (x.err || !x.rec.fat) { el.innerHTML = '<span class="muted">Avec le % de masse grasse, je calcule masse grasse et masse maigre.</span>'; return; }
-  const g = x.rec.kg * x.rec.fat / 100; el.innerHTML = `Masse grasse : <b>${num(g, 1)} kg</b> · masse maigre : <b>${num(x.rec.kg - g, 1)} kg</b>`;
+  if (x.err || !x.rec.fat) { el.innerHTML = '<span class="muted">Avec la masse grasse (en % ou en kg), je calcule l’autre valeur et la masse maigre.</span>'; return; }
+  const g = x.rec.kg * x.rec.fat / 100; el.innerHTML = `Masse grasse : <b>${num(g, 1)} kg</b> (<b>${num(x.rec.fat, 1)} %</b>) · masse maigre : <b>${num(x.rec.kg - g, 1)} kg</b>`;
 }
 
 // ---------- actions
@@ -1493,6 +1518,16 @@ Object.assign(A, {
     else { closeModal(); toast('Séance enregistrée'); }
   },
   runDel: () => { if (!confirm('Supprimer cette séance ?')) return; S.runs = S.runs.filter(r => r.id !== M.id); if (RSEL === M.id) RSEL = null; save(); closeModal(); toast('Séance supprimée'); },
+  wfMode: t => {
+    const m = t.dataset.m; if (m === M.fm) return;
+    const kg = parseNum(gv('wf_kg')), v = parseNum(gv('wf_fat')), el = document.getElementById('wf_fat');
+    if (v !== null && kg > 0) el.value = show(m === 'kg' ? Math.round(kg * v) / 100 : Math.round(v / kg * 10000) / 100);
+    else if (v !== null) el.value = '';
+    M.fm = m; S.wfm = m; save();
+    document.getElementById('wf_lab').textContent = m === 'kg' ? 'Masse grasse (kg)' : 'Masse grasse (%)';
+    document.querySelectorAll('[data-a=wfMode]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    wformCalc();
+  },
   weighNew: () => openModal({type: 'weighf', id: null}),
   weighEdit: t => openModal({type: 'weighf', id: t.dataset.id}),
   weighSave: () => {
@@ -1537,6 +1572,276 @@ C.objF = t => {
 };
 document.addEventListener('input', e => { const id = e.target.id || ''; if (id.startsWith('rf_')) rformCalc(); else if (id.startsWith('wf_')) wformCalc(); });
 document.addEventListener('change', e => { const id = e.target.id || ''; if (id.startsWith('rf_')) rformCalc(); else if (id.startsWith('wf_')) wformCalc(); });
+
+// ============================================================ PROGRAMME ADAPTATIF
+const WDN = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'];
+const WDL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+const r5 = x => Math.round(x / 5) * 5;
+const PHDESC = {
+  'Reprise': 'Retrouver la régularité et laisser tibias et articulations s’adapter.',
+  'Base': 'Allonger la sortie longue, premiers fartleks légers, premiers tests.',
+  'Spécifique': 'Allure marathon et longues sorties de 2 à 3 heures.',
+  'Affûtage': 'Baisser la charge pour arriver frais le jour de la course.'
+};
+const CODE_LAB = {ok: 'Progression', hold: 'Niveau maintenu', less: 'Charge réduite', pause: 'Reprise prudente', pain2: 'Charge réduite (gêne marquée)'};
+const KIND_LAB = {build: 'Semaine de progression', recup: 'Semaine d’allègement prévue (−25 %)', taper1: 'Affûtage', taper2: 'Affûtage', race: 'Semaine de la course'};
+let PW = null;
+
+const efPaceNow = () => { const a = runsAsc().filter(r => ['ef', 'sl'].includes(rty(r)) && r.km >= 2).slice(-5).map(r => r.s / r.km); return a.length ? median(a) : 450; };
+const kmOfMin = min => min * 60 / efPaceNow();
+const eqTime = km => S.obj.target * 60 / Math.pow(42.195 / km, 1.06);
+function workPace() {
+  const tgt = S.obj.target * 60 / 42.195, pr = projection();
+  return pr ? Math.max(tgt, pr.t / 42.195) : tgt;
+}
+
+function progSim() {
+  const P = S.prog, o = S.obj, T = todayDn(), thisM = monOf(T);
+  const s0 = dnOf(P.start), rd = dnOf(o.race);
+  if (s0 === null || rd === null) return {err: 'Date de début ou de course invalide.'};
+  const m1 = monOf(s0), N = Math.floor((monOf(rd) - m1) / 7) + 1;
+  if (N < 10) return {err: 'Il faut au moins 10 semaines entre le début du plan et la course.'};
+  const wkOf = d => Math.floor((monOf(d) - m1) / 7) + 1;
+  const by = {};
+  for (const r of S.runs) { const i = wkOf(dnOf(r.d)); (by[i] = by[i] || []).push(r); }
+  const prior = S.runs.filter(r => { const d = dnOf(r.d); return d < m1 && d >= m1 - 28; });
+  const L0 = Math.max(35, Math.min(50, Math.ceil(Math.max(0, ...prior.map(r => r.s / 60)) / 5) * 5 || 40));
+  const Lpk = 180, iP = N - 3, ideal = i => L0 + (Lpk - L0) * Math.min(1, (i - 1) / Math.max(1, iP - 1));
+  const phaseOf = i => i <= 8 ? 'Reprise' : i >= N - 2 ? 'Affûtage' : i >= N - 17 ? 'Spécifique' : 'Base';
+  const tests = [Math.round(N * .25), Math.round(N * .5), Math.round(N * .75)];
+  let L = L0, Lmax = L0, bc = 0, lastQ = false, prevCode = 'ok', prevPain = 0, empty = 0, ti = 0;
+  const weeks = [];
+  for (let i = 1; i <= N; i++) {
+    const mon = m1 + 7 * (i - 1), ph = phaseOf(i);
+    const kind = i === N ? 'race' : i === N - 1 ? 'taper2' : i === N - 2 ? 'taper1' : bc >= 3 ? 'recup' : 'build';
+    const f = {build: 1, recup: .75, taper1: .7, taper2: .5, race: 1}[kind];
+    const Lw = (kind === 'taper1' || kind === 'taper2' || kind === 'race') ? Lmax : L;
+    const gate = prevCode === 'ok' && prevPain === 0 && kind === 'build' && L >= 45;
+    const s1m = Math.max(30, Math.min(60, r5(.6 * Lw * f))), s2m = Math.max(30, Math.min(80, r5(.7 * Lw * f))), s3m = Math.max(30, r5(Lw * f));
+    const rw = Lw < 55 && ph === 'Reprise';
+    let slots;
+    if (kind === 'race') slots = [{k: 0, kind: 'ef', min: 30}, {k: 1, kind: 'accel', min: 20}, {k: 2, kind: 'race', min: 0}];
+    else {
+      let s2 = {k: 1, kind: 'ef', min: s2m, rw}, s3 = {k: 2, kind: 'long', min: s3m, rw};
+      if (gate) {
+        if (ti < 3 && i >= tests[ti]) { const km = ti === 2 ? 10 : 5; s2 = {k: 1, kind: 'test', min: km === 10 ? 80 : 55, km, ti}; ti++; lastQ = true; }
+        else if (ph === 'Base' && i >= 13 && !lastQ) { s2 = {k: 1, kind: 'fart', min: s2m, reps: Math.max(4, Math.min(10, Math.floor((s2m - 15) / 3)))}; lastQ = true; }
+        else if (ph === 'Spécifique' && s2m - 25 >= 15) { s2 = {k: 1, kind: 'am', min: s2m, bmin: Math.min(60, s2m - 25)}; lastQ = true; }
+        else lastQ = false;
+        if (ph === 'Spécifique' && i >= N - 12 && (i - (N - 12)) % 2 === 0 && s3m >= 90) s3 = {k: 2, kind: 'longam', min: s3m, fin: r5(.25 * s3m)};
+      } else lastQ = false;
+      slots = [{k: 0, kind: 'ef', min: s1m, rw}, s2, s3];
+    }
+    const done = mon < thisM;
+    let code = 'ok', mult = 1, D = 0, pain = 0; const why = [], info = [];
+    const rs = by[i] || [], am = rs.reduce((a, r) => a + r.s / 60, 0);
+    if (done && kind !== 'race') {
+      const sess = rs.filter(r => r.s >= 900); D = sess.length; pain = Math.max(0, ...rs.map(r => r.pain || 0));
+      const lg = Math.max(0, ...sess.map(r => r.s / 60));
+      const ef = sess.filter(r => ['ef', 'sl'].includes(rty(r)) && r.bpm > 0);
+      if (pain === 2) { code = 'pain2'; mult = .7; why.push('Gêne marquée signalée : la charge baisse nettement (−30 %). Si elle revient, consulte un médecin ou un kiné.'); }
+      else if (D === 0) { code = 'pause'; mult = empty >= 1 ? .7 : .85; why.push('Aucune séance cette semaine : reprise allégée (' + (empty >= 1 ? '−30' : '−15') + ' %).'); }
+      else if (D === 1) { code = 'less'; mult = .85; why.push('1 séance sur 3 : la charge baisse un peu (−15 %) pour repartir sur de bonnes bases.'); }
+      else {
+        if (D === 2) { code = 'hold'; why.push('2 séances sur 3 : on maintient le niveau, sans augmenter.'); }
+        else why.push(D + ' séances faites : objectif de la semaine tenu.');
+        if (pain === 1) { if (prevPain === 1) { code = 'less'; mult = .85; why.push('Gêne légère deux semaines de suite : la charge baisse (−15 %).'); } else { if (code === 'ok') code = 'hold'; why.push('Gêne légère signalée : on maintient et on évite l’intensité la semaine suivante.'); } }
+        const s3 = slots.find(x => x.k === 2);
+        if (code === 'ok' && s3 && s3.min >= 40 && lg < .8 * s3.min) { code = 'hold'; why.push('Sortie la plus longue : ' + Math.round(lg) + ' min pour ' + s3.min + ' prévues (moins de 80 %) : on maintient.'); }
+        if (ef.length) {
+          const rp = ef.filter(r => r.rpe); const arpe = rp.length ? rp.reduce((a, r) => a + r.rpe, 0) / rp.length : null;
+          const hi = ef.filter(r => r.bpm > o.efHi + 10).length;
+          if (code === 'ok' && hi * 2 >= ef.length && arpe !== null && arpe >= 5) { code = 'hold'; why.push('FC élevée (plus de ' + (o.efHi + 10) + ' bpm) et effort ressenti de ' + num(arpe, 1) + ' sur 10 en endurance : on maintient, ralentis.'); }
+          else if (code === 'ok' && arpe !== null && arpe >= 7) { code = 'hold'; why.push('Effort ressenti moyen de ' + num(arpe, 1) + ' sur 10 en endurance : trop dur, on maintient.'); }
+          const mb = ef.reduce((a, r) => a + r.bpm, 0) / ef.length;
+          if (mb > o.efHi) info.push('FC moyenne en endurance : ' + Math.round(mb) + ' bpm, au-dessus de ton plafond de ' + o.efHi + '. Ralentis ou intercale une minute de marche.');
+        }
+        if (code === 'ok') why.push('Pas de signal d’alerte : le programme progresse.');
+      }
+    }
+    if (code === 'ok') L = L + Math.max(0, Math.min(ideal(i + 1) - L, Math.max(3.5, .06 * L)));
+    else if (mult < 1) L = Math.max(30, L * mult);
+    if (kind === 'recup' || mult < 1) bc = 0; else if (kind === 'build') bc++;
+    if (done) { prevCode = code; prevPain = pain; empty = D === 0 ? empty + 1 : 0; }
+    else { prevCode = 'ok'; prevPain = 0; }
+    Lmax = Math.max(Lmax, L);
+    weeks.push({i, mon, ph, kind, L: Lw, Lnext: L, slots, done, cur: mon === thisM, code, why, info, D, am, pain, ideal: ideal(i)});
+  }
+  return {weeks, N, m1, rd, tests, L0, Lpk, ideal, Lmax};
+}
+function slotDate(w, s, sim) {
+  if (s.kind === 'race') return sim.rd;
+  const wd = S.prog.mv[w.mon + '|' + s.k] || S.prog.d[s.k];
+  return w.mon + (wd - 1);
+}
+function weekSlots(w, sim) {
+  return w.slots.filter(s => s.kind === 'race' || w.kind !== 'race' || slotDate(w, s, sim) < sim.rd);
+}
+function matchWeek(w, sim) {
+  const ss = weekSlots(w, sim); ss.forEach(s => { s.run = null; });
+  const rs = S.runs.filter(r => { const d = dnOf(r.d); return d >= w.mon && d < w.mon + 7 && r.s >= 600; });
+  const pr = []; ss.forEach(s => rs.forEach(r => pr.push([Math.abs(slotDate(w, s, sim) - dnOf(r.d)), s, r])));
+  pr.sort((a, b) => a[0] - b[0]);
+  const us = new Set(), ur = new Set();
+  for (const [, s, r] of pr) if (!us.has(s) && !ur.has(r)) { s.run = r; us.add(s); ur.add(r); }
+  return ss;
+}
+function slotInfo(s, w) {
+  const o = S.obj, hr = o.efHi, lines = [], ez = s.rw ? 'Alterne 8 min de course et 1 min de marche.' : 'Course continue, allure de conversation.';
+  const walk = `FC moyenne visée ≤ ${hr} bpm. Si elle dépasse ${hr}, marche 1 minute, puis reprends quand elle est redescendue vers ${hr - 10}.`;
+  const pw = workPace(), tgt = o.target * 60 / 42.195, pwTxt = fPace(pw) + ' /km' + (pw > tgt + 5 ? ' (visée finale ' + fPace(tgt) + ')' : '');
+  if (s.kind === 'ef') return {title: 'Endurance fondamentale', type: 'ef', lines: [ez, walk]};
+  if (s.kind === 'long') return {title: 'Sortie longue', type: 'sl', lines: [ez, walk, 'Ne cherche pas la vitesse : la durée est l’objectif.']};
+  if (s.kind === 'accel') return {title: 'Footing et accélérations', type: 'ef', lines: ['20 min faciles avec 4 accélérations de 20 s pour garder les jambes vives.']};
+  if (s.kind === 'fart') return {title: 'Fartlek léger', type: 'fr', lines: ['10 min d’échauffement très facile.', `${s.reps} × (1 min soutenue à effort 7 sur 10, puis 2 min faciles).`, 'Le reste en retour au calme, très facile.', 'Si la gêne au tibia revient, passe en footing facile.']};
+  if (s.kind === 'am') return {title: 'Allure marathon', type: 'fr', lines: ['15 min d’échauffement facile.', s.bmin >= 40 ? `2 × ${Math.round(s.bmin / 2)} min à allure marathon (${pwTxt}), 3 min de footing entre les blocs.` : `${s.bmin} min à allure marathon (${pwTxt}).`, '10 min de retour au calme.']};
+  if (s.kind === 'longam') return {title: 'Sortie longue avec allure marathon', type: 'sl', lines: [`Facile pendant ${s.min - s.fin} min.`, `Puis ${s.fin} min à allure marathon (${pwTxt}).`, walk]};
+  if (s.kind === 'test') {
+    const slack = [1.2, 1.1, 1.03][s.ti], tt = eqTime(s.km) * slack;
+    return {title: `Test ${s.km} km chrono`, type: 'co', lines: ['15 min d’échauffement facile et 4 accélérations de 20 s.', `${s.km} km à effort soutenu mais régulier, sur terrain plat.`, '10 min de retour au calme.', `Repère pour rester sur la trajectoire ${fTot(o.target * 60)} : ${s.km} km en ${fDur(tt)} ou moins (${fPace(tt / s.km)} /km).`], goal: tt};
+  }
+  return {title: 'Marathon de Tours', type: 'co', lines: [`Départ à 7 h 30. Allure visée : ${fPace(tgt)} /km.`, 'Pars prudent : les 15 premières minutes légèrement plus lentes que l’allure visée.', 'Bois et mange régulièrement dès les premiers kilomètres.']};
+}
+const slotKm = s => s.kind === 'race' ? 42.195 : kmOfMin(s.min);
+
+// ---------- vue Plan
+function planChart(sim) {
+  const W = 320, H = 170, L = 34, R = 8, Tm = 12, B = 24, pw = W - L - R, ph = H - Tm - B, N = sim.N, slot = pw / N, bw = Math.max(2, slot * .8);
+  const pm = sim.weeks.map(w => weekSlots(w, sim).reduce((a, s) => a + (s.kind === 'race' ? 0 : s.min), 0));
+  const mx = Math.max(60, ...pm, ...sim.weeks.filter(w => w.done).map(w => w.am)), yt = niceTicks(0, mx, 4), yhi = yt[yt.length - 1];
+  const sy = v => f1(Tm + ph - v / yhi * ph);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Minutes de course par semaine, prévu et réalisé" style="display:block">`;
+  for (const t of yt) s += `<line x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}" stroke="#E3E9EF"/><text class="ax" x="${L - 4}" y="${f1(+sy(t) + 4)}" text-anchor="end">${num(t)}</text>`;
+  let lastMonth = -1, lastX = -99;
+  sim.weeks.forEach((w, k) => {
+    const x = L + slot * k + (slot - bw) / 2, cx = L + slot * (k + .5);
+    const col = w.kind.startsWith('taper') || w.kind === 'race' ? '#C9D3DC' : '#BDD7EE';
+    s += `<rect x="${f1(x)}" y="${sy(pm[k])}" width="${f1(bw)}" height="${f1(Tm + ph - sy(pm[k]))}" fill="${col}"/>`;
+    if (w.done && w.am > 0) s += `<rect x="${f1(x + bw * .2)}" y="${sy(w.am)}" width="${f1(bw * .6)}" height="${f1(Tm + ph - sy(w.am))}" fill="#0F5F7E"/>`;
+    const mo = new Date(w.mon * 86400000).getUTCMonth();
+    if (mo !== lastMonth && (k === 0 || mo % 2 === 0) && cx - lastX >= 34) { s += `<text class="axs" x="${f1(cx)}" y="${H - 8}" text-anchor="middle">${fdn(w.mon, {month: 'short'})}</text>`; lastX = cx; }
+    lastMonth = mo;
+    if (w.cur) s += `<line x1="${f1(cx)}" x2="${f1(cx)}" y1="${Tm}" y2="${Tm + ph}" stroke="#D55E00" stroke-dasharray="3 2"/>`;
+    s += `<rect x="${f1(L + slot * k)}" y="${Tm}" width="${f1(slot)}" height="${ph}" fill="transparent" data-a="planWeek" data-i="${w.i}"/>`;
+  });
+  s += `<line x1="${L}" x2="${W - R}" y1="${Tm + ph}" y2="${Tm + ph}" stroke="#9aa5ae"/></svg>`;
+  return s;
+}
+function nextSession(sim) {
+  const T = todayDn();
+  for (const w of sim.weeks) {
+    if (w.mon + 6 < T) continue;
+    const ss = matchWeek(w, sim).sort((a, b) => slotDate(w, a, sim) - slotDate(w, b, sim));
+    for (const s of ss) if (!s.run && slotDate(w, s, sim) >= T) return {w, s, d: slotDate(w, s, sim)};
+  }
+  return null;
+}
+function progSettingsHTML() {
+  const P = S.prog, names = ['Séance 1', 'Séance 2', 'Sortie longue'];
+  const sorted = [...P.d].sort((a, b) => a - b);
+  const adj = sorted.some((d, i) => i > 0 && d - sorted[i - 1] === 1);
+  return `<section class="card"><div class="cat-t">Réglages du plan</div>
+    <label class="f">Début du plan (un lundi)<input class="edit" type="date" data-c="progF" data-f="start" value="${esc(isoOf(monOf(dnOf(P.start) || todayDn())))}"></label>
+    ${names.map((n, k) => `<label class="f">${n} : jour habituel<select class="edit" data-c="progF" data-f="d${k}">${WDL.map((l, j) => `<option value="${j + 1}" ${P.d[k] === j + 1 ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`).join('')}
+    ${new Set(P.d).size < 3 ? '<div class="warn">Choisis trois jours différents.</div>' : adj ? '<div class="hint">Deux séances sont sur des jours qui se suivent. Au début, garde un jour de repos entre deux sorties pour ménager les tibias.</div>' : ''}
+    <div class="hint">Ces jours valent pour toutes les semaines. Pour déplacer une seule séance, change son jour dans la semaine concernée.</div></section>`;
+}
+function viewRunPlan() {
+  const sim = progSim();
+  if (sim.err) return `<section class="card"><div class="warn">${esc(sim.err)}</div></section>` + progSettingsHTML();
+  const T = todayDn(), o = S.obj, cw = sim.weeks.find(w => w.cur);
+  const curI = T < sim.m1 ? 1 : T > sim.rd ? sim.N : cw ? cw.i : sim.N;
+  if (PW === null || PW < 1 || PW > sim.N) PW = curI;
+  const w = sim.weeks[PW - 1], cwk = sim.weeks[curI - 1];
+  let h = '';
+  // statut
+  const lastDone = [...sim.weeks].reverse().find(x => x.done);
+  h += `<section class="card"><div class="cat-t">Programme jusqu’au marathon</div>`;
+  if (T < sim.m1) h += `<div class="big">Début lundi</div><div class="muted">${esc(fdn(sim.m1, {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}))} · dans ${sim.m1 - T} jour${sim.m1 - T > 1 ? 's' : ''}</div>`;
+  else h += `<div class="big">Semaine ${curI} sur ${sim.N}</div><div class="muted">${esc(cwk.ph)} · ${esc(KIND_LAB[cwk.kind])}</div>`;
+  h += `<div class="bar" style="margin-top:10px" role="progressbar" aria-valuenow="${curI}" aria-valuemax="${sim.N}"><i style="width:${Math.round(curI / sim.N * 100)}%"></i></div>
+    <div class="muted" style="margin-top:6px">${esc(PHDESC[cwk.ph])}</div>
+    <div class="kv"><span>Course</span><b>${esc(fdn(sim.rd, {day: 'numeric', month: 'long', year: 'numeric'}))}</b></div>
+    <div class="kv"><span>Sortie longue de la semaine</span><b>${cwk.kind === 'race' ? 'Course' : cwk.slots[2].min + ' min'}</b></div>
+    <div class="kv"><span>Trajectoire idéale cette semaine</span><b>${Math.round(cwk.ideal)} min</b></div>`;
+  const behind = cwk.ideal - cwk.L;
+  if (behind >= 6 && cwk.kind === 'build') h += `<div class="hint">Tu es à ${Math.round(behind)} min de la trajectoire idéale : le programme rattrape ce retard progressivement, sans dépasser environ +6 % par semaine.</div>`;
+  if (sim.Lmax < sim.Lpk - 10) h += `<div class="warn">À ce rythme, la plus longue sortie serait de ${Math.round(sim.Lmax)} min (≈ ${num(kmOfMin(sim.Lmax), 0)} km) au lieu de ${sim.Lpk} min. Le temps visé pourrait demander d’être revu.</div>`;
+  h += '</section>';
+  // adaptation
+  h += `<section class="card"><div class="cat-t">Adaptation à tes séances</div>`;
+  if (!lastDone) h += `<div class="muted">Aucune semaine du plan n’est encore terminée. Le programme démarre à son niveau de base (sortie longue de ${Math.round(sim.L0)} min) et s’ajustera chaque lundi d’après ce que tu auras saisi.</div>`;
+  else {
+    h += `<div><b>Semaine ${lastDone.i} : ${esc(CODE_LAB[lastDone.code])}</b></div>${lastDone.why.map(t => `<div class="hint">• ${esc(t)}</div>`).join('')}${lastDone.info.map(t => `<div class="warn">⚠ ${esc(t)}</div>`).join('')}
+      <div class="hint">Résultat : sortie longue prévue la semaine suivante ${Math.round(lastDone.Lnext)} min (${lastDone.L > 0 ? sgn(lastDone.Lnext - lastDone.L, 0) + ' min' : ''}).</div>`;
+  }
+  h += '</section>';
+  // semaine
+  const ss = matchWeek(w, sim).sort((a, b) => slotDate(w, a, sim) - slotDate(w, b, sim));
+  const tot = ss.reduce((a, s) => a + (s.kind === 'race' ? 0 : s.min), 0);
+  h += `<div class="weeknav"><button class="n" data-a="planPrev" aria-label="Semaine précédente">‹</button><div class="t"><b>Semaine ${w.i} sur ${sim.N}</b><span class="muted">${fdn(w.mon, {day: 'numeric', month: 'short'})} – ${fdn(w.mon + 6, {day: 'numeric', month: 'short', year: 'numeric'})}</span>${PW === curI ? '' : '<br><button class="btn ghost small" data-a="planToday" style="margin-top:6px">Semaine en cours</button>'}</div><button class="n" data-a="planNext" aria-label="Semaine suivante">›</button></div>`;
+  h += `<section class="card"><div class="cat-t">${esc(KIND_LAB[w.kind])} <span class="muted">· ${esc(w.ph)} · ${tot} min de course${w.done ? '' : w.i > curI ? ' (prévision si tout se passe bien)' : ''}</span></div>`;
+  if (w.pain) h += `<div class="warn">Une gêne a été signalée cette semaine : allège la fin de semaine si elle persiste.</div>`;
+  for (const s of ss) {
+    const d = slotDate(w, s, sim), info = slotInfo(s, w), t = RT_BY[info.type], today = d === T, missed = !s.run && d < T;
+    const st = s.run ? `<span class="bdg done">Fait · ${num(s.run.km, 1)} km en ${fDur(s.run.s)}</span>` : missed ? '<span class="bdg miss">Non faite</span>' : today ? '<span class="bdg now">Aujourd’hui</span>' : '<span class="bdg">À venir</span>';
+    let res = '';
+    if (s.run && s.kind === 'test') { const pt = s.run.s * (s.km / s.run.km), ok = pt <= info.goal; res = `<div class="hint">Projeté sur ${s.km} km : ${fDur(pt)} · ${ok ? 'dans le repère' : 'au-dessus du repère de ' + fDur(info.goal)}. ${ok ? '' : 'Pas de panique : le plan continue, vérifie ensuite si l’objectif de temps reste réaliste.'}</div>`; }
+    h += `<div class="slot"><div class="sh">${tyGlyph(info.type, 22)}<div style="flex:1;min-width:0"><b>${esc(info.title)}</b><div class="muted">${esc(fdn(d, {weekday: 'long', day: 'numeric', month: 'short'}))}${s.kind === 'race' ? '' : ' · ' + s.min + ' min · ≈ ' + num(slotKm(s), 1) + ' km'}</div></div></div>
+      <div class="sub" style="margin-top:6px">${info.lines.map(esc).join('<br>')}</div>${res}
+      <div class="pa">${st}</div>
+      ${s.kind === 'race' ? '' : `<div class="two" style="margin-top:6px"><label class="f" style="margin:0">Jour<select class="edit" data-c="planDay" data-m="${w.mon}" data-k="${s.k}">${WDL.map((l, j) => `<option value="${j + 1}" ${(d - w.mon + 1) === j + 1 ? 'selected' : ''}>${l}</option>`).join('')}</select></label>${s.run ? `<button class="btn ghost small" data-a="runEdit" data-id="${esc(s.run.id)}">Voir la séance</button>` : `<button class="btn small" data-a="planRun" data-m="${w.mon}" data-k="${s.k}">Saisir cette séance</button>`}</div>`}</div>`;
+  }
+  h += '</section>';
+  // graphique
+  h += `<section class="card"><div class="cat-t">Minutes de course par semaine</div><div class="muted">Barre claire : prévu · barre foncée : réalisé · pointillé : cette semaine. Touche une semaine pour l’ouvrir.</div>${planChart(sim)}</section>`;
+  // jalons
+  h += `<section class="card"><div class="cat-t">Jalons</div>`;
+  const tw = sim.tests.map((ti, k) => ({ti, k, km: k === 2 ? 10 : 5})), slack = [1.2, 1.1, 1.03];
+  for (const x of tw) {
+    const wk = sim.weeks[x.ti - 1], plan = sim.weeks.find(v => v.slots.some(s => s.kind === 'test' && s.ti === x.k)), ww = plan || wk;
+    const slt = ww.slots.find(s => s.kind === 'test' && s.ti === x.k), dd = slt ? slotDate(ww, slt, sim) : wk.mon;
+    if (slt) matchWeek(ww, sim); const rr = slt && slt.run;
+    h += `<div class="kv"><span>Test ${x.km} km · ${esc(fdn(dd, {day: 'numeric', month: 'short', year: 'numeric'}))}<br><span class="muted">repère ≤ ${fDur(eqTime(x.km) * slack[x.k])}${rr ? ' · fait : ' + fDur(rr.s * (x.km / rr.km)) : ''}</span></span><b>semaine ${ww.i}</b></div>`;
+  }
+  h += `<div class="kv"><span>Plus longue sortie (≈ ${num(kmOfMin(sim.Lmax), 0)} km à ton allure actuelle)</span><b>semaine ${sim.N - 3}</b></div><div class="kv"><span>Affûtage</span><b>semaines ${sim.N - 2} à ${sim.N}</b></div>
+    <div class="kv"><span>Marathon de Tours</span><b>${esc(fdn(sim.rd, {day: 'numeric', month: 'short', year: 'numeric'}))}</b></div>
+    <div class="hint">Les repères sont calculés à partir de ton temps visé (${fTot(o.target * 60)}). Si deux tests de suite sont nettement au-dessus, l’objectif de temps est à rediscuter : c’est ta décision, l’appli te donne juste les chiffres.</div></section>`;
+  h += progSettingsHTML();
+  h += `<details class="card"><summary style="min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue)">Comment le programme s’adapte</summary>
+    <div class="hint" style="margin-top:8px">Chaque lundi, l’appli regarde la semaine terminée :<br>
+    • 3 séances faites, sortie longue tenue, ressenti correct : la sortie longue augmente (au plus +6 % par semaine, et pas plus de 3,5 min tant que la sortie est courte) pour suivre la trajectoire vers 3 h.<br>
+    • 2 séances sur 3, sortie longue écourtée (moins de 80 %) ou effort ressenti trop élevé : on maintient le niveau.<br>
+    • 1 séance : −15 %. Aucune séance : −15 %, puis −30 % si ça dure.<br>
+    • Gêne légère : on maintient et on évite l’intensité. Deux semaines de suite : −15 %. Gêne marquée : −30 %.<br>
+    • Une semaine d’allègement (−25 %) tous les 4 semaines de progression.<br>
+    • Les fartleks, l’allure marathon et les tests n’arrivent que si la semaine précédente s’est bien passée et sans gêne.<br>
+    • La durée des séances vient du niveau de la sortie longue ; les kilomètres affichés suivent ton allure récente en endurance.<br>
+    C’est un programme à règles simples, pas un entraîneur qui te voit courir. En cas de douleur persistante, vois un professionnel de santé.</div></details>`;
+  return h;
+}
+
+Object.assign(A, {
+  planPrev: () => { PW = Math.max(1, (PW || 1) - 1); render(true); },
+  planNext: () => { PW = (PW || 1) + 1; render(true); },
+  planToday: () => { PW = null; render(true); },
+  planWeek: t => { PW = +t.dataset.i; render(); },
+  goPlan: () => { RTAB = 'plan'; PW = null; render(); },
+  planRun: t => {
+    const sim = progSim(); if (sim.err) return;
+    const w = sim.weeks.find(x => x.mon === +t.dataset.m), s = w && w.slots.find(x => x.k === +t.dataset.k); if (!s) return;
+    const d = slotDate(w, s, sim), T = todayDn(), info = slotInfo(s, w);
+    openModal({type: 'runf', id: null, draft: {d: isoOf(d <= T ? d : T), type: info.type, hint: 'Prévu : ' + info.title + ', ' + s.min + ' min.'}});
+  }
+});
+C.planDay = t => { S.prog.mv[t.dataset.m + '|' + t.dataset.k] = +t.value; save(); render(true); };
+C.progF = t => {
+  const f = t.dataset.f, P = S.prog;
+  if (f === 'start') { if (dnOf(t.value) !== null) { P.start = isoOf(monOf(dnOf(t.value))); P.mv = {}; PW = null; } }
+  else if (/^d[0-2]$/.test(f)) { P.d[+f[1]] = +t.value; P.mv = {}; }
+  save(); render(true);
+};
+const RVIEWS = {dash: viewRunDash, plan: viewRunPlan, sess: viewRunSess, weigh: viewRunWeigh, rset: viewRunSet};
 
 render();
 if (!S.rseen) { S.rseen = 1; save(); setTimeout(() => toast('Nouveau : touche « Course » en haut pour le suivi'), 1200); }
