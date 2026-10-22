@@ -181,6 +181,18 @@ input[type=date].edit{appearance:none;-webkit-appearance:none;min-width:0}
 .bdg.now{background:var(--blue);color:#fff;border-color:var(--blue)}
 .slot .two{align-items:end}
 
+details.blk{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px 12px;background:var(--bg)}
+details.blk>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700;color:var(--blue);font-size:14px}
+details.blk>summary::-webkit-details-marker{display:none}
+details.blk>summary::after{content:"›";margin-left:auto;font-size:22px;color:var(--muted);transition:transform .15s}
+details.blk[open]>summary::after{transform:rotate(90deg)}
+.bk{padding:9px 0;border-top:1px solid var(--line)}
+.bk.in{margin-left:14px;border-left:3px solid var(--blue3);padding-left:10px}
+.bk.rp{font-weight:700;color:var(--blue);font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+.bn{display:flex;justify-content:space-between;gap:10px}
+.bn span{white-space:nowrap;font-weight:700;color:var(--blue)}
+.bt{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+
 </style>
 </head>
 <body>
@@ -1624,9 +1636,9 @@ function progSim() {
     else {
       let s2 = {k: 1, kind: 'ef', min: s2m, rw}, s3 = {k: 2, kind: 'long', min: s3m, rw};
       if (gate) {
-        if (ti < 3 && i >= tests[ti]) { const km = ti === 2 ? 10 : 5; s2 = {k: 1, kind: 'test', min: km === 10 ? 80 : 55, km, ti}; ti++; lastQ = true; }
+        if (ti < 3 && i >= tests[ti]) { const km = ti === 2 ? 10 : 5; s2 = {k: 1, kind: 'test', min: km === 10 ? 90 : 60, km, ti}; ti++; lastQ = true; }
         else if (ph === 'Base' && i >= 13 && !lastQ) { s2 = {k: 1, kind: 'fart', min: s2m, reps: Math.max(4, Math.min(10, Math.floor((s2m - 15) / 3)))}; lastQ = true; }
-        else if (ph === 'Spécifique' && s2m - 25 >= 15) { s2 = {k: 1, kind: 'am', min: s2m, bmin: Math.min(60, s2m - 25)}; lastQ = true; }
+        else if (ph === 'Spécifique' && s2m - 28 >= 15) { s2 = {k: 1, kind: 'am', min: s2m, bmin: Math.min(60, s2m - 28)}; lastQ = true; }
         else lastQ = false;
         if (ph === 'Spécifique' && i >= N - 12 && (i - (N - 12)) % 2 === 0 && s3m >= 90) s3 = {k: 2, kind: 'longam', min: s3m, fin: r5(.25 * s3m)};
       } else lastQ = false;
@@ -1703,6 +1715,56 @@ function slotInfo(s, w) {
   return {title: 'Marathon de Tours', type: 'co', lines: [`Départ à 7 h 30. Allure visée : ${fPace(tgt)} /km.`, 'Pars prudent : les 15 premières minutes légèrement plus lentes que l’allure visée.', 'Bois et mange régulièrement dès les premiers kilomètres.']};
 }
 const slotKm = s => s.kind === 'race' ? 42.195 : kmOfMin(s.min);
+
+
+// ---------- blocs à recopier dans Garmin Connect
+const pr2 = (a, b) => fPace(a) + '–' + fPace(b) + ' /km';
+function slotBlocks(s) {
+  const o = S.obj, hr = `FC ${o.efLo}–${o.efHi} bpm`, none = 'Aucune cible', ef = efPaceNow();
+  const st = (n, dur, tgt) => ({n, dur, tgt: tgt || none});
+  const rep = (k, steps) => ({rep: k, steps});
+  const tgtM = workPace(), am = pr2(tgtM - 5, tgtM + 5), mn = x => x + ' min';
+  const easy = m => st('Course', mn(m), hr);
+  if (s.kind === 'ef' || s.kind === 'long') {
+    if (s.rw) {
+      const n = Math.floor(s.min / 9), rest = s.min - 9 * n, b = [rep(n, [st('Course', '8 min', hr), st('Récupération (marche)', '1 min')])];
+      if (rest > 0) b.push(st('Retour au calme (marche)', mn(rest)));
+      return b;
+    }
+    return [easy(s.min)];
+  }
+  if (s.kind === 'fart') {
+    const fast = pr2(ef * .90, ef * .94), cool = Math.max(5, s.min - 10 - s.reps * 3);
+    return [st('Échauffement', '10 min'), rep(s.reps, [st('Course', '1 min', 'Allure ≈ ' + fast + ' (effort 7/10, ajuste au ressenti)'), st('Récupération', '2 min', 'Aucune cible, très facile')])].concat(cool > 10 ? [st('Course facile', mn(cool - 5), hr), st('Retour au calme', '5 min')] : [st('Retour au calme', mn(cool))]);
+  }
+  if (s.kind === 'am') {
+    const two = s.bmin >= 40, bm = two ? Math.round(s.bmin / 2) : s.bmin;
+    const mid = two ? [st('Course', mn(bm), 'Allure ' + am), st('Récupération', '3 min', 'Aucune cible, footing facile'), st('Course', mn(bm), 'Allure ' + am)] : [st('Course', mn(bm), 'Allure ' + am)];
+    return [st('Échauffement', '15 min'), ...mid, st('Retour au calme', '10 min')];
+  }
+  if (s.kind === 'longam') return [st('Course', mn(s.min - s.fin), hr), st('Course', mn(s.fin), 'Allure ' + am)];
+  if (s.kind === 'test') {
+    const tt = eqTime(s.km) * [1.2, 1.1, 1.03][s.ti], pc = tt / s.km;
+    return [st('Échauffement', '15 min'), rep(4, [st('Course', '20 s', 'Accélération progressive'), st('Récupération', '40 s')]), st('Course', s.km + ' km', 'Allure repère ≤ ' + fPace(pc) + ' /km, effort soutenu mais régulier'), st('Retour au calme', '10 min')];
+  }
+  if (s.kind === 'accel') return [easy(12), rep(4, [st('Course', '20 s', 'Accélération progressive'), st('Récupération', '1 min')]), st('Retour au calme', '3 min')];
+  const tg = o.target * 60 / 42.195;
+  return [st('Course', '42,195 km', 'Allure visée ' + fPace(tg) + ' /km, départ prudent')];
+}
+function blocksText(name, bl) {
+  let n = 0; const L = [name];
+  const line = x => `${++n}. ${x.n} · ${x.dur} · ${x.tgt}`;
+  for (const b of bl) { if (b.rep) { L.push(`Répéter ${b.rep} fois :`); b.steps.forEach(x => L.push('   - ' + x.n + ' · ' + x.dur + ' · ' + x.tgt)); } else L.push(line(b)); }
+  return L.join('\n');
+}
+function blocksHTML(s, w, info) {
+  const bl = slotBlocks(s), id = 'blk|' + w.mon + '|' + s.k;
+  const row = (x, ind) => `<div class="bk${ind ? ' in' : ''}"><div class="bn"><b>${esc(x.n)}</b><span>${esc(x.dur)}</span></div><div class="bt">${esc(x.tgt)}</div></div>`;
+  const body = bl.map(b => b.rep ? `<div class="bk rp">Répéter ${b.rep} fois</div>${b.steps.map(x => row(x, 1)).join('')}` : row(b, 0)).join('');
+  return `<details class="blk" data-id="${esc(id)}" ${OPEN.has(id) ? 'open' : ''}><summary>Blocs pour la montre</summary>
+    <div class="hint" style="margin-top:0">À recopier dans l’éditeur de séances de Garmin Connect (Entraînement et planification, Séances).</div>${body}
+    <button class="btn ghost small" style="margin-top:10px" data-a="copyBlocks" data-m="${w.mon}" data-k="${s.k}">Copier en texte</button></details>`;
+}
 
 // ---------- vue Plan
 function planChart(sim) {
@@ -1788,7 +1850,7 @@ function viewRunPlan() {
     let res = '';
     if (s.run && s.kind === 'test') { const pt = s.run.s * (s.km / s.run.km), ok = pt <= info.goal; res = `<div class="hint">Projeté sur ${s.km} km : ${fDur(pt)} · ${ok ? 'dans le repère' : 'au-dessus du repère de ' + fDur(info.goal)}. ${ok ? '' : 'Pas de panique : le plan continue, vérifie ensuite si l’objectif de temps reste réaliste.'}</div>`; }
     h += `<div class="slot"><div class="sh">${tyGlyph(info.type, 22)}<div style="flex:1;min-width:0"><b>${esc(info.title)}</b><div class="muted">${esc(fdn(d, {weekday: 'long', day: 'numeric', month: 'short'}))}${s.kind === 'race' ? '' : ' · ' + s.min + ' min · ≈ ' + num(slotKm(s), 1) + ' km'}</div></div></div>
-      <div class="sub" style="margin-top:6px">${info.lines.map(esc).join('<br>')}</div>${res}
+      <div class="sub" style="margin-top:6px">${info.lines.map(esc).join('<br>')}</div>${res}${blocksHTML(s, w, info)}
       <div class="pa">${st}</div>
       ${s.kind === 'race' ? '' : `<div class="two" style="margin-top:6px"><label class="f" style="margin:0">Jour<select class="edit" data-c="planDay" data-m="${w.mon}" data-k="${s.k}">${WDL.map((l, j) => `<option value="${j + 1}" ${(d - w.mon + 1) === j + 1 ? 'selected' : ''}>${l}</option>`).join('')}</select></label>${s.run ? `<button class="btn ghost small" data-a="runEdit" data-id="${esc(s.run.id)}">Voir la séance</button>` : `<button class="btn small" data-a="planRun" data-m="${w.mon}" data-k="${s.k}">Saisir cette séance</button>`}</div>`}</div>`;
   }
@@ -1822,6 +1884,13 @@ function viewRunPlan() {
 }
 
 Object.assign(A, {
+  copyBlocks: t => {
+    const sim = progSim(); if (sim.err) return;
+    const w = sim.weeks.find(x => x.mon === +t.dataset.m), s = w && w.slots.find(x => x.k === +t.dataset.k); if (!s) return;
+    const txt = blocksText(slotInfo(s, w).title + ' · ' + (s.kind === 'race' ? '' : s.min + ' min'), slotBlocks(s));
+    const ok = () => toast('Blocs copiés'), ko = () => { window.prompt('Copie ce texte :', txt); };
+    try { navigator.clipboard.writeText(txt).then(ok, ko); } catch (e) { ko(); }
+  },
   planPrev: () => { PW = Math.max(1, (PW || 1) - 1); render(true); },
   planNext: () => { PW = (PW || 1) + 1; render(true); },
   planToday: () => { PW = null; render(true); },
